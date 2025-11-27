@@ -16,14 +16,17 @@ export enum TestProxyChannel {
  * @param proxyConfig 代理配置或代理URL
  * @returns 代理测试结果
  */
-export async function testProxyInfo(channel: TestProxyChannel | TestProxyChannel[], proxyConfig?: ProxyConfig | string): Promise<TestProxyResult> {
+export async function testProxyInfo(
+  proxyConfig?: ProxyConfig | string,
+  channel: TestProxyChannel | TestProxyChannel[] = Object.values(TestProxyChannel)
+): Promise<TestProxyResult> {
   try {
     if (Array.isArray(channel)) {
       if (channel.length === 0) {
         throw new TestProxyError('至少需要提供一个测试通道');
       }
       try {
-        return await Promise.any(channel.map(c => testProxyInfo(c, proxyConfig)));
+        return await Promise.any(channel.map(c => testProxyInfo(proxyConfig, c)));
       } catch (e) {
         if (e instanceof AggregateError) {
           throw new TestProxyError(

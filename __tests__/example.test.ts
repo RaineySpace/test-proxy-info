@@ -1,8 +1,3 @@
-/**
- * 使用示例测试
- * 展示如何在实际项目中使用这个库
- */
-
 import { describe, it, expect } from 'vitest';
 import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234 } from '../src/index';
 import { getProxyUrl, createAxiosInstance, ProxyConfig } from '../src/common';
@@ -44,8 +39,13 @@ describe('example - 基本用法', () => {
   });
 
   describe('代理测试函数', () => {
-    it('testProxyInfo: 返回 Promise', () => {
-      const promise = testProxyInfo(TestProxyChannel.IP234);
+    it('testProxyInfo: 返回 Promise（无参数）', () => {
+      const promise = testProxyInfo();
+      expect(promise).toBeInstanceOf(Promise);
+    });
+
+    it('testProxyInfo: 返回 Promise（指定通道）', () => {
+      const promise = testProxyInfo(undefined, TestProxyChannel.IP234);
       expect(promise).toBeInstanceOf(Promise);
     });
 
@@ -55,20 +55,21 @@ describe('example - 基本用法', () => {
     });
 
     it('testProxyInfo: 支持多种配置方式', () => {
-      // ProxyConfig 对象
       const config: ProxyConfig = {
         protocol: 'http',
         host: 'proxy.example.com',
         port: '8080',
       };
-      expect(testProxyInfo(TestProxyChannel.IP234, config)).toBeInstanceOf(Promise);
+      expect(testProxyInfo(config, TestProxyChannel.IP234)).toBeInstanceOf(Promise);
 
-      // URL 字符串
       const url = 'http://user:pass@proxy.example.com:8080';
-      expect(testProxyInfo(TestProxyChannel.IP234, url)).toBeInstanceOf(Promise);
+      expect(testProxyInfo(url, TestProxyChannel.IP234)).toBeInstanceOf(Promise);
 
-      // 无代理
-      expect(testProxyInfo(TestProxyChannel.IP234)).toBeInstanceOf(Promise);
+      expect(testProxyInfo(undefined, TestProxyChannel.IP234)).toBeInstanceOf(Promise);
+
+      expect(testProxyInfo(config)).toBeInstanceOf(Promise);
+
+      expect(testProxyInfo()).toBeInstanceOf(Promise);
     });
   });
 
@@ -104,10 +105,6 @@ describe('example - 使用场景', () => {
         password: 'pass',
       };
 
-      // 在实际使用中:
-      // const result = await testProxyInfo(TestProxyChannel.IP234, config);
-      // if (result.ip) console.log('代理可用');
-
       expect(config).toBeDefined();
     });
 
@@ -117,11 +114,6 @@ describe('example - 使用场景', () => {
         'http://user2:pass2@proxy2.com:8080',
         'http://user3:pass3@proxy3.com:8080',
       ];
-
-      // 在实际使用中:
-      // const results = await Promise.allSettled(
-      //   proxies.map(p => testProxyInfo(TestProxyChannel.IP234, p))
-      // );
 
       expect(proxies).toHaveLength(3);
     });
@@ -147,7 +139,7 @@ describe('example - 使用场景', () => {
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('超时')), timeout)
         );
-        const testPromise = Promise.resolve({ ip: '1.2.3.4', country: 'US', province: 'CA', city: 'SF', timezone: 'America/Los_Angeles' });
+        const testPromise = Promise.resolve({ ip: '1.2.3.4', country: 'US', province: 'CA', city: 'SF', timezone: 'America/Los_Angeles', latency: 100 });
         return Promise.race([testPromise, timeoutPromise]);
       };
 
@@ -163,7 +155,7 @@ describe('example - 使用场景', () => {
         while (attempts < maxRetries) {
           attempts++;
           try {
-            return { ip: '1.2.3.4', country: 'US', province: 'CA', city: 'SF', timezone: 'America/Los_Angeles' };
+            return { ip: '1.2.3.4', country: 'US', province: 'CA', city: 'SF', timezone: 'America/Los_Angeles', latency: 100 };
           } catch (error) {
             if (attempts >= maxRetries) throw error;
           }
@@ -176,4 +168,3 @@ describe('example - 使用场景', () => {
     });
   });
 });
-

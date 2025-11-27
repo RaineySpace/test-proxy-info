@@ -17,6 +17,7 @@
 - ✅ 测量请求延迟（latency）
 - ✅ 支持用户名/密码认证
 - ✅ 支持多种测试通道（IP234、IPInfo）
+- ✅ 多通道并发测试，自动返回最快成功的结果
 - ✅ 完善的错误处理和错误码分类
 - ✅ 30秒请求超时保护
 - ✅ TypeScript 类型支持
@@ -75,8 +76,8 @@ const proxyConfig = {
   password: 'your-password',
 };
 
-// 使用 IP234 通道测试
-const result = await testProxyInfo(TestProxyChannel.IP234, proxyConfig);
+// 使用默认通道测试（自动使用所有通道，返回最快成功的结果）
+const result = await testProxyInfo(proxyConfig);
 console.log('代理测试结果:', result);
 // 输出示例:
 // {
@@ -88,16 +89,20 @@ console.log('代理测试结果:', result);
 //   latency: 245  // 请求延迟（毫秒）
 // }
 
-// 或使用 IPInfo 通道测试
-const result2 = await testProxyInfo(TestProxyChannel.IPInfo, proxyConfig);
+// 指定 IP234 通道测试
+const result2 = await testProxyInfo(proxyConfig, TestProxyChannel.IP234);
 console.log('代理测试结果:', result2);
 
+// 指定 IPInfo 通道测试
+const result3 = await testProxyInfo(proxyConfig, TestProxyChannel.IPInfo);
+console.log('代理测试结果:', result3);
+
 // 使用多通道测试（返回第一个成功的结果）
-const result3 = await testProxyInfo(
-  [TestProxyChannel.IP234, TestProxyChannel.IPInfo],
-  proxyConfig
+const result4 = await testProxyInfo(
+  proxyConfig,
+  [TestProxyChannel.IP234, TestProxyChannel.IPInfo]
 );
-console.log('多通道测试结果:', result3);
+console.log('多通道测试结果:', result4);
 ```
 
 ### 使用代理 URL
@@ -107,19 +112,19 @@ import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
 
 // HTTP 代理
 const httpProxyUrl = 'http://username:password@proxy.example.com:10021';
-const result1 = await testProxyInfo(TestProxyChannel.IP234, httpProxyUrl);
+const result1 = await testProxyInfo(httpProxyUrl);
 
 // HTTPS 代理
 const httpsProxyUrl = 'https://username:password@secure-proxy.example.com:443';
-const result2 = await testProxyInfo(TestProxyChannel.IP234, httpsProxyUrl);
+const result2 = await testProxyInfo(httpsProxyUrl, TestProxyChannel.IP234);
 
 // SOCKS5 代理
 const socks5ProxyUrl = 'socks5://username:password@socks-proxy.example.com:1080';
-const result3 = await testProxyInfo(TestProxyChannel.IP234, socks5ProxyUrl);
+const result3 = await testProxyInfo(socks5ProxyUrl, TestProxyChannel.IP234);
 
 // SOCKS5H 代理（远程 DNS 解析）
 const socks5hProxyUrl = 'socks5h://username:password@socks-proxy.example.com:1080';
-const result4 = await testProxyInfo(TestProxyChannel.IP234, socks5hProxyUrl);
+const result4 = await testProxyInfo(socks5hProxyUrl, TestProxyChannel.IP234);
 ```
 
 ### 测试本机 IP（不使用代理）
@@ -127,9 +132,13 @@ const result4 = await testProxyInfo(TestProxyChannel.IP234, socks5hProxyUrl);
 ```typescript
 import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
 
-// 不传入代理配置，测试本机 IP
-const result = await testProxyInfo(TestProxyChannel.IP234);
+// 不传入代理配置，测试本机 IP（使用默认所有通道）
+const result = await testProxyInfo();
 console.log('本机 IP 信息:', result);
+
+// 指定通道测试本机 IP
+const result2 = await testProxyInfo(undefined, TestProxyChannel.IP234);
+console.log('本机 IP 信息:', result2);
 ```
 
 ### CommonJS 使用方式
@@ -139,14 +148,20 @@ const { testProxyInfo, TestProxyChannel } = require('test-proxy-info');
 
 async function test() {
   const proxyConfig = {
+    protocol: 'http',
     host: 'proxy.example.com',
     port: '10021',
     username: 'your-username',
     password: 'your-password',
   };
   
-  const result = await testProxyInfo(TestProxyChannel.IP234, proxyConfig);
+  // 使用默认通道
+  const result = await testProxyInfo(proxyConfig);
   console.log('代理测试结果:', result);
+  
+  // 或指定通道
+  const result2 = await testProxyInfo(proxyConfig, TestProxyChannel.IP234);
+  console.log('代理测试结果:', result2);
 }
 
 test();
@@ -158,6 +173,7 @@ test();
 import { testProxyInfoByIp234 } from 'test-proxy-info';
 
 const proxyConfig = {
+  protocol: 'http',
   host: 'proxy.example.com',
   port: '10021',
   username: 'your-username',
@@ -170,17 +186,18 @@ console.log('代理测试结果:', result);
 
 ## API 文档
 
-### `testProxyInfo(channel, proxyConfig?)`
+### `testProxyInfo(proxyConfig?, channel?)`
 
 主要的代理测试函数。
 
 **参数：**
 
-- `channel`: `TestProxyChannel | TestProxyChannel[]` - 测试通道或通道数组，支持：
+- `proxyConfig`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
+- `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
   - `TestProxyChannel.IP234` - 使用 IP234 服务
   - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
   - 传入数组时，会并发测试所有通道，返回第一个成功的结果
-- `proxyConfig`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
+  - 默认值：使用所有通道 `[TestProxyChannel.IP234, TestProxyChannel.IPInfo]`
 
 **返回值：**
 
@@ -203,6 +220,7 @@ console.log('代理测试结果:', result);
   - `NETWORK_ERROR` - 网络连接失败
   - `PROXY_SERVER_ERROR` - 代理服务器异常
   - `DETECTION_CHANNEL_ERROR` - 检测渠道异常
+  - `MULTIPLE_CHANNEL_TEST_FAILED` - 多渠道测试全部失败
   - `UNKNOWN_ERROR` - 未知异常
 
 ### `testProxyInfoByIp234(proxyConfig?)`
@@ -237,7 +255,7 @@ console.log('代理测试结果:', result);
 interface ProxyConfig {
   protocol: 'http' | 'https' | 'socks5' | 'socks5h';  // 代理协议
   host: string;                                         // 代理服务器主机地址
-  port?: string;                                        // 代理服务器端口（可选）
+  port?: string | number;                               // 代理服务器端口（可选）
   username?: string;                                    // 认证用户名（可选）
   password?: string;                                    // 认证密码（可选）
 }
@@ -271,8 +289,9 @@ enum TestProxyChannel {
 
 ```typescript
 class TestProxyError extends Error {
-  constructor(message: string, code?: TestProxyErrorCode);
-  code?: TestProxyErrorCode;  // 错误码
+  constructor(message: string, code?: TestProxyErrorCode, errors?: Error[]);
+  code?: TestProxyErrorCode;   // 错误码
+  errors?: Error[];            // 多渠道测试失败时的所有错误
 }
 ```
 
@@ -282,10 +301,11 @@ class TestProxyError extends Error {
 
 ```typescript
 enum TestProxyErrorCode {
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',                      // 未知异常
-  NETWORK_ERROR = 'NETWORK_ERROR',                      // 网络异常
-  PROXY_SERVER_ERROR = 'PROXY_SERVER_ERROR',           // 代理服务器异常
-  DETECTION_CHANNEL_ERROR = 'DETECTION_CHANNEL_ERROR'  // 检测渠道异常
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',                              // 未知异常
+  NETWORK_ERROR = 'NETWORK_ERROR',                              // 网络异常
+  PROXY_SERVER_ERROR = 'PROXY_SERVER_ERROR',                    // 代理服务器异常
+  DETECTION_CHANNEL_ERROR = 'DETECTION_CHANNEL_ERROR',          // 检测渠道异常
+  MULTIPLE_CHANNEL_TEST_FAILED = 'MULTIPLE_CHANNEL_TEST_FAILED' // 多渠道测试失败
 }
 ```
 
@@ -342,9 +362,9 @@ const response = await axios.get('https://api.example.com');
 ```typescript
 import { testProxyInfo, TestProxyChannel, TestProxyResult } from 'test-proxy-info';
 
-async function testProxyInfo() {
+async function testProxy() {
   try {
-    // 方式 1: 使用配置对象
+    // 方式 1: 使用默认通道（推荐）
     const config = {
       protocol: 'http',
       host: 'proxy.example.com',
@@ -353,10 +373,7 @@ async function testProxyInfo() {
       password: 'mypass',
     };
     
-    const result: TestProxyResult = await testProxyInfo(
-      TestProxyChannel.IP234,
-      config
-    );
+    const result: TestProxyResult = await testProxyInfo(config);
     
     console.log('代理测试成功！');
     console.log(`出口 IP: ${result.ip}`);
@@ -366,12 +383,12 @@ async function testProxyInfo() {
     
     // 方式 2: 使用 URL 字符串
     const url = 'http://myuser:mypass@proxy.example.com:10021';
-    const result2 = await testProxyInfo(TestProxyChannel.IP234, url);
+    const result2 = await testProxyInfo(url);
     console.log('第二次测试结果:', result2);
     
-    // 方式 3: 使用 IPInfo 通道
-    const result3 = await testProxyInfo(TestProxyChannel.IPInfo, config);
-    console.log('IPInfo 测试结果:', result3);
+    // 方式 3: 指定 IP234 通道
+    const result3 = await testProxyInfo(config, TestProxyChannel.IP234);
+    console.log('IP234 测试结果:', result3);
     
     // 方式 4: 使用 SOCKS5 代理
     const socks5Config = {
@@ -381,7 +398,7 @@ async function testProxyInfo() {
       username: 'myuser',
       password: 'mypass',
     };
-    const result4 = await testProxyInfo(TestProxyChannel.IP234, socks5Config);
+    const result4 = await testProxyInfo(socks5Config, TestProxyChannel.IP234);
     console.log('SOCKS5 代理测试结果:', result4);
     console.log(`延迟: ${result4.latency}ms`);
     
@@ -390,13 +407,13 @@ async function testProxyInfo() {
   }
 }
 
-testProxyInfo();
+testProxy();
 ```
 
 ### 批量测试多个代理
 
 ```typescript
-import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
+import { testProxyInfo } from 'test-proxy-info';
 
 async function testMultipleProxies() {
   const proxies = [
@@ -406,7 +423,7 @@ async function testMultipleProxies() {
   ];
 
   const results = await Promise.allSettled(
-    proxies.map(proxy => testProxyInfo(TestProxyChannel.IP234, proxy))
+    proxies.map(proxy => testProxyInfo(proxy))
   );
 
   results.forEach((result, index) => {
@@ -447,13 +464,17 @@ testMultipleProxies();
 3. **DETECTION_CHANNEL_ERROR** - 检测渠道异常
    - HTTP 状态码 >= 400 (403, 500, 502, 503 等)
 
-4. **UNKNOWN_ERROR** - 未知异常
+4. **MULTIPLE_CHANNEL_TEST_FAILED** - 多渠道测试失败
+   - 当使用多通道测试时，所有通道都失败时抛出
+   - 包含 `errors` 属性，包含所有通道的错误信息
+
+5. **UNKNOWN_ERROR** - 未知异常
    - 其他未分类的错误
 
 ### 错误处理示例
 
 ```typescript
-import { testProxyInfo, TestProxyChannel, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
+import { testProxyInfo, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
 
 async function testWithErrorHandling() {
   try {
@@ -465,7 +486,7 @@ async function testWithErrorHandling() {
       password: 'pass',
     };
     
-    const result = await testProxyInfo(TestProxyChannel.IP234, proxyConfig);
+    const result = await testProxyInfo(proxyConfig);
     console.log('测试成功:', result);
     
   } catch (error) {
@@ -479,6 +500,12 @@ async function testWithErrorHandling() {
           break;
         case TestProxyErrorCode.DETECTION_CHANNEL_ERROR:
           console.error('检测服务异常，请稍后重试');
+          break;
+        case TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED:
+          console.error('所有检测通道都失败了');
+          if (error.errors) {
+            error.errors.forEach((e, i) => console.error(`  通道 ${i + 1}: ${e.message}`));
+          }
           break;
         case TestProxyErrorCode.UNKNOWN_ERROR:
         default:
@@ -497,7 +524,7 @@ testWithErrorHandling();
 ### 详细错误处理示例
 
 ```typescript
-import { testProxyInfo, TestProxyChannel, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
+import { testProxyInfo, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
 
 async function testProxyWithDetailedErrorHandling() {
   const proxyConfig = {
@@ -509,7 +536,7 @@ async function testProxyWithDetailedErrorHandling() {
   };
 
   try {
-    const result = await testProxyInfo(TestProxyChannel.IP234, proxyConfig);
+    const result = await testProxyInfo(proxyConfig);
     console.log('✅ 代理测试成功！');
     console.log(`   出口 IP: ${result.ip}`);
     console.log(`   位置: ${result.country}, ${result.province}, ${result.city}`);
@@ -543,6 +570,15 @@ async function testProxyWithDetailedErrorHandling() {
           console.error('   💡 建议:');
           console.error('      - 尝试切换到其他检测通道');
           console.error('      - 稍后重试');
+          break;
+          
+        case TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED:
+          console.error('   💡 建议:');
+          console.error('      - 所有检测通道都失败了，请检查代理配置');
+          if (error.errors) {
+            console.error('   📋 各通道错误详情:');
+            error.errors.forEach((e, i) => console.error(`      ${i + 1}. ${e.message}`));
+          }
           break;
           
         case TestProxyErrorCode.UNKNOWN_ERROR:

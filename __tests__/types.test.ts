@@ -12,24 +12,22 @@ import {
 } from '../src/common';
 import { AxiosInstance } from 'axios';
 
-/**
- * TypeScript 类型测试
- * 验证所有导出的类型定义是否正确
- */
 describe('类型测试', () => {
   describe('ProxyConfig', () => {
     it('应该有正确的类型定义', () => {
       const config: ProxyConfig = {
+        protocol: 'http',
         host: 'proxy.example.com',
         port: '8080',
         username: 'user',
         password: 'pass',
       };
 
+      expectTypeOf(config.protocol).toEqualTypeOf<'http' | 'https' | 'socks5' | 'socks5h'>();
       expectTypeOf(config.host).toBeString();
-      expectTypeOf(config.port).toBeString();
-      expectTypeOf(config.username).toBeString();
-      expectTypeOf(config.password).toBeString();
+      expectTypeOf(config.port).toEqualTypeOf<string | number | undefined>();
+      expectTypeOf(config.username).toEqualTypeOf<string | undefined>();
+      expectTypeOf(config.password).toEqualTypeOf<string | undefined>();
     });
   });
 
@@ -41,6 +39,7 @@ describe('类型测试', () => {
         province: 'California',
         city: 'San Francisco',
         timezone: 'America/Los_Angeles',
+        latency: 100,
       };
 
       expectTypeOf(result.ip).toBeString();
@@ -48,6 +47,7 @@ describe('类型测试', () => {
       expectTypeOf(result.province).toBeString();
       expectTypeOf(result.city).toBeString();
       expectTypeOf(result.timezone).toBeString();
+      expectTypeOf(result.latency).toBeNumber();
     });
   });
 
@@ -55,13 +55,14 @@ describe('类型测试', () => {
     it('应该是枚举类型', () => {
       expectTypeOf(TestProxyChannel.IP234).toBeString();
       expectTypeOf(TestProxyChannel.IP234).toEqualTypeOf<'ip234'>();
+      expectTypeOf(TestProxyChannel.IPInfo).toEqualTypeOf<'ip_info'>();
     });
   });
 
   describe('testProxyInfo 函数类型', () => {
-    it('应该接受channel和可选的proxyConfig', () => {
-      expectTypeOf(testProxyInfo).parameter(0).toEqualTypeOf<TestProxyChannel>();
-      expectTypeOf(testProxyInfo).parameter(1).toEqualTypeOf<ProxyConfig | string | undefined>();
+    it('应该接受proxyConfig和可选的channel', () => {
+      expectTypeOf(testProxyInfo).parameter(0).toEqualTypeOf<ProxyConfig | string | undefined>();
+      expectTypeOf(testProxyInfo).parameter(1).toEqualTypeOf<TestProxyChannel | TestProxyChannel[] | undefined>();
     });
 
     it('应该返回Promise<TestProxyResult>', () => {
@@ -69,20 +70,26 @@ describe('类型测试', () => {
     });
 
     it('应该能够使用不同的参数调用', () => {
-      // 只传channel
-      expectTypeOf(testProxyInfo(TestProxyChannel.IP234)).toEqualTypeOf<Promise<TestProxyResult>>();
+      expectTypeOf(testProxyInfo()).toEqualTypeOf<Promise<TestProxyResult>>();
 
-      // 传channel和config对象
       const config: ProxyConfig = {
+        protocol: 'http',
         host: 'proxy.example.com',
         port: '8080',
         username: 'user',
         password: 'pass',
       };
-      expectTypeOf(testProxyInfo(TestProxyChannel.IP234, config)).toEqualTypeOf<Promise<TestProxyResult>>();
+      expectTypeOf(testProxyInfo(config)).toEqualTypeOf<Promise<TestProxyResult>>();
 
-      // 传channel和url字符串
-      expectTypeOf(testProxyInfo(TestProxyChannel.IP234, 'http://user:pass@proxy.example.com:8080'))
+      expectTypeOf(testProxyInfo(config, TestProxyChannel.IP234)).toEqualTypeOf<Promise<TestProxyResult>>();
+
+      expectTypeOf(testProxyInfo('http://user:pass@proxy.example.com:8080'))
+        .toEqualTypeOf<Promise<TestProxyResult>>();
+
+      expectTypeOf(testProxyInfo(undefined, TestProxyChannel.IP234))
+        .toEqualTypeOf<Promise<TestProxyResult>>();
+
+      expectTypeOf(testProxyInfo(config, [TestProxyChannel.IP234, TestProxyChannel.IPInfo]))
         .toEqualTypeOf<Promise<TestProxyResult>>();
     });
   });
@@ -120,6 +127,7 @@ describe('类型测试', () => {
   describe('联合类型支持', () => {
     it('proxyConfig应该支持对象或字符串', () => {
       const config1: ProxyConfig | string = {
+        protocol: 'http',
         host: 'proxy.example.com',
         port: '8080',
         username: 'user',
@@ -133,4 +141,3 @@ describe('类型测试', () => {
     });
   });
 });
-

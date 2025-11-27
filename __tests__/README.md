@@ -8,9 +8,11 @@
 __tests__/
 ├── common.test.ts        # 通用工具函数测试
 ├── ip234.test.ts         # IP234 测试通道测试
+├── ip-info.test.ts       # IPInfo 测试通道测试
 ├── index.test.ts         # 主入口函数测试
 ├── integration.test.ts   # 集成测试（需要网络连接）
 ├── types.test.ts         # TypeScript 类型测试
+├── example.test.ts       # 使用示例测试
 └── README.md            # 本文件
 ```
 
@@ -72,11 +74,30 @@ pnpm test:ui
   - 接受字符串类型的代理配置
   - 验证实例可用性
 
+- `TestProxyError` - 测试错误类
+  - 验证错误码支持（包括 MULTIPLE_CHANNEL_TEST_FAILED）
+  - 验证错误数组支持
+
 #### ip234.test.ts
 
 测试 IP234 测试通道：
 
 - `testProxyInfoByIp234()` - 测试代理测试功能
+  - 无代理时获取IP信息
+  - 使用代理配置对象
+  - 使用代理URL字符串
+  - 处理API返回空数据
+  - 处理网络错误
+  - 处理超时错误
+  - 验证字段映射
+
+使用 Mock 模拟 axios 请求，不需要实际网络连接。
+
+#### ip-info.test.ts
+
+测试 IPInfo 测试通道：
+
+- `testProxyInfoByIpInfo()` - 测试代理测试功能
   - 无代理时获取IP信息
   - 使用代理配置对象
   - 使用代理URL字符串
@@ -97,10 +118,16 @@ pnpm test:ui
   - 处理不支持的通道
   - 传播底层错误
   - 处理空代理配置
+  - **默认通道测试** - 不指定通道时使用所有通道
+  - **多通道测试** - 并发测试多个通道，返回最快成功的结果
 
 - `TestProxyChannel` - 测试枚举
   - 验证枚举值
   - 检查导出
+
+**注意**：`testProxyInfo` 函数签名为 `testProxyInfo(proxyConfig?, channel?)`，其中：
+- `proxyConfig` 是第一个参数（可选）
+- `channel` 是第二个参数（可选），默认使用所有通道
 
 #### types.test.ts
 
@@ -111,6 +138,14 @@ TypeScript 类型测试：
 - 验证参数和返回值类型
 - 验证联合类型支持
 
+#### example.test.ts
+
+使用示例测试：
+
+- 演示各种使用方式
+- 验证工具函数
+- 验证代理测试函数
+
 ### 集成测试
 
 #### integration.test.ts
@@ -120,21 +155,20 @@ TypeScript 类型测试：
 **环境变量：**
 
 - `SKIP_INTEGRATION_TESTS` - 设置为 `true` 跳过集成测试（默认）
-- `TEST_PROXY_HOST` - 测试用代理主机
-- `TEST_PROXY_PORT` - 测试用代理端口
-- `TEST_PROXY_USERNAME` - 测试用代理用户名
-- `TEST_PROXY_PASSWORD` - 测试用代理密码
+- `TEST_PROXY_URL` - 测试用代理 URL（如 `http://user:pass@proxy.example.com:8080`）
 
 **测试内容：**
 
 - 实际 API 调用
-  - 获取本机IP信息（无代理）
+  - 获取本机IP信息（无代理，默认通道）
+  - 获取本机IP信息（指定通道）
   - 直接调用测试函数
   - 使用 Axios 实例发送请求
 
 - 代理测试（需要有效代理配置）
   - 通过代理获取IP信息
   - 使用代理URL字符串
+  - 使用默认通道
 
 - 错误处理
   - 无效的代理配置
@@ -147,10 +181,7 @@ TypeScript 类型测试：
 SKIP_INTEGRATION_TESTS=false pnpm test __tests__/integration.test.ts
 
 # 使用代理测试（需要提供有效的代理配置）
-TEST_PROXY_HOST=proxy.example.com \
-TEST_PROXY_PORT=8080 \
-TEST_PROXY_USERNAME=user \
-TEST_PROXY_PASSWORD=pass \
+TEST_PROXY_URL=http://user:pass@proxy.example.com:8080 \
 SKIP_INTEGRATION_TESTS=false \
 pnpm test __tests__/integration.test.ts
 ```
@@ -190,12 +221,14 @@ vi.mocked(axios.create).mockReturnValue(mockAxiosInstance as any);
 
 ### 模块 Mock
 
-测试主入口函数时，我们模拟 ip234 模块：
+测试主入口函数时，我们模拟 ip234 和 ip-info 模块：
 
 ```typescript
 vi.mock('../src/ip234');
+vi.mock('../src/ip-info');
 
 vi.mocked(ip234Module.default).mockResolvedValue(mockResult);
+vi.mocked(ipInfoModule.default).mockResolvedValue(mockResult);
 ```
 
 ## 编写新测试
@@ -312,7 +345,7 @@ A: 集成测试需要网络连接。检查网络状态，或设置 `SKIP_INTEGRA
 
 ### Q: 如何测试真实代理
 
-A: 设置环境变量 `TEST_PROXY_*` 并运行集成测试。
+A: 设置环境变量 `TEST_PROXY_URL` 并运行集成测试。
 
 ### Q: Mock 不生效
 
@@ -333,4 +366,3 @@ A: 确保在导入模块前调用 `vi.mock()`，并在每个测试后清理 mock
 - [Vitest 文档](https://vitest.dev/)
 - [Vitest API 参考](https://vitest.dev/api/)
 - [测试最佳实践](https://vitest.dev/guide/best-practices.html)
-

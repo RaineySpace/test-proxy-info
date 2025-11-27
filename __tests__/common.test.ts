@@ -61,6 +61,15 @@ describe('common - TestProxyError', () => {
     expect(TestProxyErrorCode.NETWORK_ERROR).toBe('NETWORK_ERROR');
     expect(TestProxyErrorCode.PROXY_SERVER_ERROR).toBe('PROXY_SERVER_ERROR');
     expect(TestProxyErrorCode.DETECTION_CHANNEL_ERROR).toBe('DETECTION_CHANNEL_ERROR');
+    expect(TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED).toBe('MULTIPLE_CHANNEL_TEST_FAILED');
+  });
+
+  it('应该创建带 errors 数组的 TestProxyError', () => {
+    const errors = [new Error('Error 1'), new Error('Error 2')];
+    const error = new TestProxyError('多渠道测试失败', TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED, errors);
+    expect(error.message).toBe('多渠道测试失败');
+    expect(error.code).toBe(TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED);
+    expect(error.errors).toEqual(errors);
   });
 });
 
