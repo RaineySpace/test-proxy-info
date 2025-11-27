@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234 } from '../src/index';
-import { getProxyUrl, createAxiosInstance, ProxyConfig } from '../src/common';
+import { getProxyUrl, ProxyConfig } from '../src/common';
+import { createAxiosInstance } from '../src/requester';
 
 describe('example - 基本用法', () => {
   describe('工具函数', () => {

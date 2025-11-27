@@ -1,4 +1,5 @@
-import { TestProxyResult, ProxyConfig, TestProxyError, TestProxyErrorCode } from './common';
+import { TestProxyResult, TestProxyError, TestProxyErrorCode } from './common';
+import { CreateRequesterOptions } from './requester';
 import testProxyInfoByIp234 from './ip234';
 import testProxyInfoByIpInfo from './ip-info';
 
@@ -12,12 +13,12 @@ export enum TestProxyChannel {
 
 /**
  * 代理测试
- * @param channel 测试通道或测试通道数组，如果是数组，则返回第一个测试成功的结果
- * @param proxyConfig 代理配置或代理URL
+ * @param createRequesterOptions 创建请求器选项
+ * @param channel 测试通道
  * @returns 代理测试结果
  */
 export async function testProxyInfo(
-  proxyConfig?: ProxyConfig | string,
+  createRequesterOptions?: CreateRequesterOptions,
   channel: TestProxyChannel | TestProxyChannel[] = Object.values(TestProxyChannel)
 ): Promise<TestProxyResult> {
   try {
@@ -26,7 +27,7 @@ export async function testProxyInfo(
         throw new TestProxyError('至少需要提供一个测试通道');
       }
       try {
-        return await Promise.any(channel.map(c => testProxyInfo(proxyConfig, c)));
+        return await Promise.any(channel.map(c => testProxyInfo(createRequesterOptions, c)));
       } catch (e) {
         if (e instanceof AggregateError) {
           throw new TestProxyError(
@@ -40,9 +41,9 @@ export async function testProxyInfo(
     }
     switch (channel) {
       case TestProxyChannel.IP234:
-        return await testProxyInfoByIp234(proxyConfig);
+        return await testProxyInfoByIp234(createRequesterOptions);
       case TestProxyChannel.IPInfo:
-        return await testProxyInfoByIpInfo(proxyConfig);
+        return await testProxyInfoByIpInfo(createRequesterOptions);
       default:
         throw new TestProxyError(`不支持的通道: ${channel}`);
     }
@@ -57,4 +58,5 @@ export async function testProxyInfo(
 export * from './ip234';
 export * from './ip-info';
 export * from './common';
+export * from './requester';
 export default testProxyInfo;

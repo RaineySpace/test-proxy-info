@@ -223,25 +223,25 @@ console.log('代理测试结果:', result);
   - `MULTIPLE_CHANNEL_TEST_FAILED` - 多渠道测试全部失败
   - `UNKNOWN_ERROR` - 未知异常
 
-### `testProxyInfoByIp234(proxyConfig?)`
+### `testProxyInfoByIp234(options?)`
 
 使用 IP234 通道测试代理。
 
 **参数：**
 
-- `proxyConfig`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
+- `options`: `CreateRequesterOptions` (可选) - 代理配置对象、代理 URL 字符串或自定义请求器
 
 **返回值：**
 
 返回一个 `Promise<TestProxyResult>`
 
-### `testProxyInfoByIpInfo(proxyConfig?)`
+### `testProxyInfoByIpInfo(options?)`
 
 使用 IPInfo 通道测试代理。
 
 **参数：**
 
-- `proxyConfig`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
+- `options`: `CreateRequesterOptions` (可选) - 代理配置对象、代理 URL 字符串或自定义请求器
 
 **返回值：**
 
@@ -309,6 +309,25 @@ enum TestProxyErrorCode {
 }
 ```
 
+#### `Requester`
+
+自定义请求器接口，用于注入自定义的 HTTP 请求实现。
+
+```typescript
+interface Requester {
+  get: <T = any>(url: string) => Promise<T>;
+  post: <T = any, D = any>(url: string, data: D) => Promise<T>;
+}
+```
+
+#### `CreateRequesterOptions`
+
+创建请求器的选项类型。
+
+```typescript
+type CreateRequesterOptions = ProxyConfig | string | Requester;
+```
+
 ## 工具函数
 
 ### `getProxyUrl(proxyConfig)`
@@ -353,6 +372,25 @@ const axios = createAxiosInstance(proxyConfig);
 // 现在可以使用这个 axios 实例发送请求，请求会通过代理
 // 默认 30 秒超时，超时后会抛出 NETWORK_ERROR
 const response = await axios.get('https://api.example.com');
+```
+
+### `createRequester(options?)`
+
+创建请求器实例。如果传入的是 `Requester` 对象，则直接返回；否则根据代理配置创建基于 Axios 的请求器。
+
+```typescript
+import { createRequester } from 'test-proxy-info';
+
+// 使用代理配置创建请求器
+const requester = createRequester(proxyConfig);
+const data = await requester.get('https://api.example.com');
+
+// 使用自定义请求器
+const customRequester = {
+  get: async (url) => { /* 自定义实现 */ },
+  post: async (url, data) => { /* 自定义实现 */ },
+};
+const requester2 = createRequester(customRequester);
 ```
 
 ## 示例

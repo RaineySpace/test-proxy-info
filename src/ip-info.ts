@@ -1,4 +1,5 @@
-import { TestProxyResult, createAxiosInstance, ProxyConfig, TestProxyError, TestProxyErrorCode } from './common';
+import { TestProxyResult, TestProxyError, TestProxyErrorCode } from './common';
+import { createRequester, CreateRequesterOptions } from './requester';
 
 /**
  * IPInfo结果
@@ -24,13 +25,13 @@ interface IpInfoResult {
 
 /**
  * 测试代理通过IPInfo
- * @param proxyConfig 代理配置或代理URL
+ * @param createRequesterOptions 创建请求器选项
  * @returns 代理测试结果
  */
-export async function testProxyInfoByIpInfo(proxyConfig?: ProxyConfig | string): Promise<TestProxyResult> {
-  const axios = createAxiosInstance(proxyConfig);
+export async function testProxyInfoByIpInfo(createRequesterOptions?: CreateRequesterOptions): Promise<TestProxyResult> {
+  const requester = createRequester(createRequesterOptions);
   const startTime = Date.now();
-  const { data } = await axios.get<IpInfoResult>('https://ipinfo.io/json');
+  const data = await requester.get<IpInfoResult>('https://ipinfo.io/json');
   const latency = Date.now() - startTime;
   if (!data) throw new TestProxyError('IPInfo 检测渠道返回结果为空', TestProxyErrorCode.DETECTION_CHANNEL_ERROR);
   return {

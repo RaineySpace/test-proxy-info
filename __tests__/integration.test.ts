@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234, testProxyInfoByIpInfo } from '../src/index';
-import { getProxyUrl, createAxiosInstance } from '../src/common';
+import { getProxyUrl } from '../src/common';
+import { createAxiosInstance } from '../src/requester';
 
 const skipIntegration = process.env.SKIP_INTEGRATION_TESTS === 'true';
 

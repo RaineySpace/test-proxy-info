@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getProxyUrl, createAxiosInstance, ProxyConfig, TestProxyError, TestProxyErrorCode, TestProxyResult } from '../src/common';
+import { getProxyUrl, ProxyConfig, TestProxyError, TestProxyErrorCode, TestProxyResult } from '../src/common';
+import { createAxiosInstance } from '../src/requester';
 
 describe('common - TestProxyResult 类型', () => {
   it('应该包含所有必需的字段，包括 latency', () => {
