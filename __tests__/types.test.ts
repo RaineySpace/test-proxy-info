@@ -2,15 +2,16 @@ import { describe, it, expectTypeOf } from 'vitest';
 import {
   testProxyInfo,
   TestProxyChannel,
-  testProxyInfoByIp234,
 } from '../src/index';
 import {
-  ProxyConfig,
   TestProxyResult,
-  getProxyUrl,
-  createAxiosInstance,
 } from '../src/common';
-import { AxiosInstance } from 'axios';
+import {
+  ProxyConfig,
+  createProxyFetch,
+  Fetcher,
+  CreateProxyFetchOptions,
+} from '../src/requester';
 
 describe('类型测试', () => {
   describe('ProxyConfig', () => {
@@ -23,7 +24,7 @@ describe('类型测试', () => {
         password: 'pass',
       };
 
-      expectTypeOf(config.protocol).toEqualTypeOf<'http' | 'https' | 'socks5' | 'socks5h'>();
+      expectTypeOf(config.protocol).toEqualTypeOf<'http' | 'https'>();
       expectTypeOf(config.host).toBeString();
       expectTypeOf(config.port).toEqualTypeOf<string | number | undefined>();
       expectTypeOf(config.username).toEqualTypeOf<string | undefined>();
@@ -60,8 +61,8 @@ describe('类型测试', () => {
   });
 
   describe('testProxyInfo 函数类型', () => {
-    it('应该接受proxyConfig和可选的channel', () => {
-      expectTypeOf(testProxyInfo).parameter(0).toEqualTypeOf<ProxyConfig | string | undefined>();
+    it('应该接受 CreateProxyFetchOptions 和可选的 channel', () => {
+      expectTypeOf(testProxyInfo).parameter(0).toEqualTypeOf<CreateProxyFetchOptions | undefined>();
       expectTypeOf(testProxyInfo).parameter(1).toEqualTypeOf<TestProxyChannel | TestProxyChannel[] | undefined>();
     });
 
@@ -94,33 +95,13 @@ describe('类型测试', () => {
     });
   });
 
-  describe('testProxyInfoByIp234 函数类型', () => {
-    it('应该接受可选的proxyConfig', () => {
-      expectTypeOf(testProxyInfoByIp234).parameter(0).toEqualTypeOf<ProxyConfig | string | undefined>();
+  describe('createProxyFetch 函数类型', () => {
+    it('应该接受可选的 CreateProxyFetchOptions', () => {
+      expectTypeOf(createProxyFetch).parameter(0).toEqualTypeOf<CreateProxyFetchOptions | undefined>();
     });
 
-    it('应该返回Promise<TestProxyResult>', () => {
-      expectTypeOf(testProxyInfoByIp234).returns.toEqualTypeOf<Promise<TestProxyResult>>();
-    });
-  });
-
-  describe('getProxyUrl 函数类型', () => {
-    it('应该接受ProxyConfig或string', () => {
-      expectTypeOf(getProxyUrl).parameter(0).toEqualTypeOf<ProxyConfig | string>();
-    });
-
-    it('应该返回string', () => {
-      expectTypeOf(getProxyUrl).returns.toBeString();
-    });
-  });
-
-  describe('createAxiosInstance 函数类型', () => {
-    it('应该接受可选的proxyConfig', () => {
-      expectTypeOf(createAxiosInstance).parameter(0).toEqualTypeOf<ProxyConfig | string | undefined>();
-    });
-
-    it('应该返回AxiosInstance', () => {
-      expectTypeOf(createAxiosInstance).returns.toEqualTypeOf<AxiosInstance>();
+    it('应该返回 Fetcher', () => {
+      expectTypeOf(createProxyFetch).returns.toEqualTypeOf<Fetcher>();
     });
   });
 

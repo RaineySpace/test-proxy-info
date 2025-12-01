@@ -7,19 +7,16 @@
 
 一个用于测试代理服务器的 Node.js 工具库，支持检测代理的出口 IP 地址及地理位置信息。
 
-## 快速开始
-
 ## 功能特性
 
-- ✅ 支持 HTTP/HTTPS/SOCKS5/SOCKS5H 代理测试
+- ✅ 支持 HTTP/HTTPS 代理测试
 - ✅ 获取代理出口 IP 地址
 - ✅ 获取代理地理位置信息（国家、省份、城市、时区）
 - ✅ 测量请求延迟（latency）
 - ✅ 支持用户名/密码认证
 - ✅ 支持多种测试通道（IP234、IPInfo）
 - ✅ 多通道并发测试，自动返回最快成功的结果
-- ✅ 完善的错误处理和错误码分类
-- ✅ 30秒请求超时保护
+- ✅ 基于 undici 的高性能 HTTP 客户端
 - ✅ TypeScript 类型支持
 - ✅ 同时支持 CommonJS 和 ES Module
 
@@ -69,7 +66,7 @@ import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
 
 // 使用代理配置对象
 const proxyConfig = {
-  protocol: 'http', // 支持 'http' | 'https' | 'socks5' | 'socks5h'
+  protocol: 'http', // 支持 'http' | 'https'
   host: 'proxy.example.com',
   port: '10021',
   username: 'your-username',
@@ -117,14 +114,6 @@ const result1 = await testProxyInfo(httpProxyUrl);
 // HTTPS 代理
 const httpsProxyUrl = 'https://username:password@secure-proxy.example.com:443';
 const result2 = await testProxyInfo(httpsProxyUrl, TestProxyChannel.IP234);
-
-// SOCKS5 代理
-const socks5ProxyUrl = 'socks5://username:password@socks-proxy.example.com:1080';
-const result3 = await testProxyInfo(socks5ProxyUrl, TestProxyChannel.IP234);
-
-// SOCKS5H 代理（远程 DNS 解析）
-const socks5hProxyUrl = 'socks5h://username:password@socks-proxy.example.com:1080';
-const result4 = await testProxyInfo(socks5hProxyUrl, TestProxyChannel.IP234);
 ```
 
 ### 测试本机 IP（不使用代理）
@@ -139,6 +128,30 @@ console.log('本机 IP 信息:', result);
 // 指定通道测试本机 IP
 const result2 = await testProxyInfo(undefined, TestProxyChannel.IP234);
 console.log('本机 IP 信息:', result2);
+```
+
+### 使用自定义 Fetcher
+
+```typescript
+import { testProxyInfo, createProxyFetch } from 'test-proxy-info';
+
+// 创建自定义 fetcher（例如：复用同一个代理连接）
+const customFetch = createProxyFetch({
+  protocol: 'http',
+  host: 'proxy.example.com',
+  port: '10021',
+});
+
+// 使用自定义 fetcher 进行多次测试（复用连接）
+const result1 = await testProxyInfo(customFetch);
+const result2 = await testProxyInfo(customFetch);
+
+// 或者完全自定义 fetcher 函数
+const myFetcher = async (url: string) => {
+  // 自定义请求逻辑
+  return fetch(url);
+};
+const result3 = await testProxyInfo(myFetcher);
 ```
 
 ### CommonJS 使用方式
@@ -167,32 +180,15 @@ async function test() {
 test();
 ```
 
-### 直接使用 IP234 测试函数
-
-```typescript
-import { testProxyInfoByIp234 } from 'test-proxy-info';
-
-const proxyConfig = {
-  protocol: 'http',
-  host: 'proxy.example.com',
-  port: '10021',
-  username: 'your-username',
-  password: 'your-password',
-};
-
-const result = await testProxyInfoByIp234(proxyConfig);
-console.log('代理测试结果:', result);
-```
-
 ## API 文档
 
-### `testProxyInfo(proxyConfig?, channel?)`
+### `testProxyInfo(options?, channel?)`
 
 主要的代理测试函数。
 
 **参数：**
 
-- `proxyConfig`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
+- `options`: `CreateProxyFetchOptions | Fetcher` (可选) - 代理配置对象、代理 URL 字符串或自定义 Fetcher 函数
 - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
   - `TestProxyChannel.IP234` - 使用 IP234 服务
   - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
@@ -216,36 +212,28 @@ console.log('代理测试结果:', result);
 
 **抛出异常：**
 
-- `TestProxyError` - 包含错误码的自定义错误，可能的错误码：
-  - `NETWORK_ERROR` - 网络连接失败
-  - `PROXY_SERVER_ERROR` - 代理服务器异常
-  - `DETECTION_CHANNEL_ERROR` - 检测渠道异常
-  - `MULTIPLE_CHANNEL_TEST_FAILED` - 多渠道测试全部失败
-  - `UNKNOWN_ERROR` - 未知异常
+- `Error` - 当测试失败时抛出标准 Error
+- `AggregateError` - 当使用多通道测试且所有通道都失败时抛出
 
-### `testProxyInfoByIp234(options?)`
+### `createProxyFetch(options?)`
 
-使用 IP234 通道测试代理。
+创建带代理配置的 Fetcher 函数。
 
 **参数：**
 
-- `options`: `CreateRequesterOptions` (可选) - 代理配置对象、代理 URL 字符串或自定义请求器
+- `options`: `CreateProxyFetchOptions` (可选) - 代理配置对象或代理 URL 字符串
 
 **返回值：**
 
-返回一个 `Promise<TestProxyResult>`
+返回一个 `Fetcher` 函数，可用于 `testProxyInfo` 或直接发送 HTTP 请求。
 
-### `testProxyInfoByIpInfo(options?)`
+```typescript
+import { createProxyFetch } from 'test-proxy-info';
 
-使用 IPInfo 通道测试代理。
-
-**参数：**
-
-- `options`: `CreateRequesterOptions` (可选) - 代理配置对象、代理 URL 字符串或自定义请求器
-
-**返回值：**
-
-返回一个 `Promise<TestProxyResult>`
+const fetcher = createProxyFetch('http://user:pass@proxy.example.com:8080');
+const response = await fetcher('https://api.example.com/data');
+const data = await response.json();
+```
 
 ### 类型定义
 
@@ -253,11 +241,11 @@ console.log('代理测试结果:', result);
 
 ```typescript
 interface ProxyConfig {
-  protocol: 'http' | 'https' | 'socks5' | 'socks5h';  // 代理协议
-  host: string;                                         // 代理服务器主机地址
-  port?: string | number;                               // 代理服务器端口（可选）
-  username?: string;                                    // 认证用户名（可选）
-  password?: string;                                    // 认证密码（可选）
+  protocol: 'http' | 'https';  // 代理协议
+  host: string;                // 代理服务器主机地址
+  port?: string | number;      // 代理服务器端口（可选）
+  username?: string;           // 认证用户名（可选）
+  password?: string;           // 认证密码（可选）
 }
 ```
 
@@ -283,114 +271,16 @@ enum TestProxyChannel {
 }
 ```
 
-#### `TestProxyError`
-
-自定义错误类，包含错误码。
+#### `Fetcher`
 
 ```typescript
-class TestProxyError extends Error {
-  constructor(message: string, code?: TestProxyErrorCode, errors?: Error[]);
-  code?: TestProxyErrorCode;   // 错误码
-  errors?: Error[];            // 多渠道测试失败时的所有错误
-}
+type Fetcher = typeof fetch;  // 兼容标准 fetch API 的函数
 ```
 
-#### `TestProxyErrorCode`
-
-错误码枚举。
+#### `CreateProxyFetchOptions`
 
 ```typescript
-enum TestProxyErrorCode {
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',                              // 未知异常
-  NETWORK_ERROR = 'NETWORK_ERROR',                              // 网络异常
-  PROXY_SERVER_ERROR = 'PROXY_SERVER_ERROR',                    // 代理服务器异常
-  DETECTION_CHANNEL_ERROR = 'DETECTION_CHANNEL_ERROR',          // 检测渠道异常
-  MULTIPLE_CHANNEL_TEST_FAILED = 'MULTIPLE_CHANNEL_TEST_FAILED' // 多渠道测试失败
-}
-```
-
-#### `Requester`
-
-自定义请求器接口，用于注入自定义的 HTTP 请求实现。
-
-```typescript
-interface Requester {
-  get: <T = any>(url: string) => Promise<T>;
-  post: <T = any, D = any>(url: string, data: D) => Promise<T>;
-}
-```
-
-#### `CreateRequesterOptions`
-
-创建请求器的选项类型。
-
-```typescript
-type CreateRequesterOptions = ProxyConfig | string | Requester;
-```
-
-## 工具函数
-
-### `getProxyUrl(proxyConfig)`
-
-将代理配置对象转换为代理 URL 字符串。
-
-```typescript
-import { getProxyUrl } from 'test-proxy-info';
-
-const proxyConfig = {
-  protocol: 'http',
-  host: 'proxy.example.com',
-  port: '10021',
-  username: 'user',
-  password: 'pass',
-};
-
-const url = getProxyUrl(proxyConfig);
-// 返回: 'http://user:pass@proxy.example.com:10021'
-
-// SOCKS5 代理示例
-const socks5Config = {
-  protocol: 'socks5',
-  host: 'socks-proxy.example.com',
-  port: '1080',
-  username: 'user',
-  password: 'pass',
-};
-
-const socks5Url = getProxyUrl(socks5Config);
-// 返回: 'socks5://user:pass@socks-proxy.example.com:1080'
-```
-
-### `createAxiosInstance(proxyConfig?)`
-
-创建配置了代理的 Axios 实例。所有实例默认配置 **30秒请求超时**。
-
-```typescript
-import { createAxiosInstance } from 'test-proxy-info';
-
-const axios = createAxiosInstance(proxyConfig);
-// 现在可以使用这个 axios 实例发送请求，请求会通过代理
-// 默认 30 秒超时，超时后会抛出 NETWORK_ERROR
-const response = await axios.get('https://api.example.com');
-```
-
-### `createRequester(options?)`
-
-创建请求器实例。如果传入的是 `Requester` 对象，则直接返回；否则根据代理配置创建基于 Axios 的请求器。
-
-```typescript
-import { createRequester } from 'test-proxy-info';
-
-// 使用代理配置创建请求器
-const requester = createRequester(proxyConfig);
-const data = await requester.get('https://api.example.com');
-
-// 使用自定义请求器
-const customRequester = {
-  get: async (url) => { /* 自定义实现 */ },
-  post: async (url, data) => { /* 自定义实现 */ },
-};
-const requester2 = createRequester(customRequester);
+type CreateProxyFetchOptions = ProxyConfig | string;  // 代理配置对象或代理 URL 字符串
 ```
 
 ## 示例
@@ -427,18 +317,6 @@ async function testProxy() {
     // 方式 3: 指定 IP234 通道
     const result3 = await testProxyInfo(config, TestProxyChannel.IP234);
     console.log('IP234 测试结果:', result3);
-    
-    // 方式 4: 使用 SOCKS5 代理
-    const socks5Config = {
-      protocol: 'socks5',
-      host: 'socks-proxy.example.com',
-      port: '1080',
-      username: 'myuser',
-      password: 'mypass',
-    };
-    const result4 = await testProxyInfo(socks5Config, TestProxyChannel.IP234);
-    console.log('SOCKS5 代理测试结果:', result4);
-    console.log(`延迟: ${result4.latency}ms`);
     
   } catch (error) {
     console.error('代理测试失败:', error.message);
@@ -482,37 +360,12 @@ testMultipleProxies();
 
 ## 错误处理
 
-库提供了完善的错误处理机制，所有错误都通过 `TestProxyError` 抛出，并带有明确的错误码。
-
-### 错误分类
-
-1. **NETWORK_ERROR** - 网络异常
-   - 网络超时 (ETIMEDOUT) - 包括 30 秒请求超时
-   - DNS 解析失败 (ENOTFOUND)
-   - 网络不可达 (ENETUNREACH)
-   - 临时 DNS 解析失败 (EAI_AGAIN)
-   - 包含 "timeout" 关键字的错误
-
-2. **PROXY_SERVER_ERROR** - 代理服务器异常
-   - 代理连接被拒绝 (ECONNREFUSED)
-   - 代理认证失败 (407)
-   - 代理连接重置 (ECONNRESET)
-   - 包含 "proxy" 关键字的连接错误
-
-3. **DETECTION_CHANNEL_ERROR** - 检测渠道异常
-   - HTTP 状态码 >= 400 (403, 500, 502, 503 等)
-
-4. **MULTIPLE_CHANNEL_TEST_FAILED** - 多渠道测试失败
-   - 当使用多通道测试时，所有通道都失败时抛出
-   - 包含 `errors` 属性，包含所有通道的错误信息
-
-5. **UNKNOWN_ERROR** - 未知异常
-   - 其他未分类的错误
+库使用标准的 JavaScript Error 进行错误处理。
 
 ### 错误处理示例
 
 ```typescript
-import { testProxyInfo, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
+import { testProxyInfo } from 'test-proxy-info';
 
 async function testWithErrorHandling() {
   try {
@@ -528,30 +381,11 @@ async function testWithErrorHandling() {
     console.log('测试成功:', result);
     
   } catch (error) {
-    if (error instanceof TestProxyError) {
-      switch (error.code) {
-        case TestProxyErrorCode.NETWORK_ERROR:
-          console.error('网络连接失败，请检查网络连接');
-          break;
-        case TestProxyErrorCode.PROXY_SERVER_ERROR:
-          console.error('代理服务器连接失败，请检查代理配置');
-          break;
-        case TestProxyErrorCode.DETECTION_CHANNEL_ERROR:
-          console.error('检测服务异常，请稍后重试');
-          break;
-        case TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED:
-          console.error('所有检测通道都失败了');
-          if (error.errors) {
-            error.errors.forEach((e, i) => console.error(`  通道 ${i + 1}: ${e.message}`));
-          }
-          break;
-        case TestProxyErrorCode.UNKNOWN_ERROR:
-        default:
-          console.error('未知错误:', error.message);
-          break;
-      }
+    if (error instanceof AggregateError) {
+      console.error('所有检测通道都失败了:');
+      error.errors.forEach((e, i) => console.error(`  通道 ${i + 1}: ${e.message}`));
     } else {
-      console.error('程序异常:', error);
+      console.error('测试失败:', error.message);
     }
   }
 }
@@ -559,87 +393,9 @@ async function testWithErrorHandling() {
 testWithErrorHandling();
 ```
 
-### 详细错误处理示例
-
-```typescript
-import { testProxyInfo, TestProxyError, TestProxyErrorCode } from 'test-proxy-info';
-
-async function testProxyWithDetailedErrorHandling() {
-  const proxyConfig = {
-    protocol: 'http',
-    host: 'proxy.example.com',
-    port: '10021',
-    username: 'user',
-    password: 'pass',
-  };
-
-  try {
-    const result = await testProxyInfo(proxyConfig);
-    console.log('✅ 代理测试成功！');
-    console.log(`   出口 IP: ${result.ip}`);
-    console.log(`   位置: ${result.country}, ${result.province}, ${result.city}`);
-    console.log(`   时区: ${result.timezone}`);
-    console.log(`   延迟: ${result.latency}ms`);
-    return result;
-    
-  } catch (error) {
-    if (error instanceof TestProxyError) {
-      console.error(`❌ 代理测试失败 [${error.code}]`);
-      console.error(`   错误信息: ${error.message}`);
-      
-      // 根据错误码提供具体的解决建议
-      switch (error.code) {
-        case TestProxyErrorCode.NETWORK_ERROR:
-          console.error('   💡 建议:');
-          console.error('      - 检查网络连接是否正常');
-          console.error('      - 检查防火墙设置');
-          console.error('      - 尝试增加超时时间');
-          break;
-          
-        case TestProxyErrorCode.PROXY_SERVER_ERROR:
-          console.error('   💡 建议:');
-          console.error('      - 检查代理服务器地址和端口是否正确');
-          console.error('      - 检查用户名和密码是否正确');
-          console.error('      - 确认代理服务器是否在线');
-          console.error('      - 检查代理协议类型是否正确 (http/https/socks5)');
-          break;
-          
-        case TestProxyErrorCode.DETECTION_CHANNEL_ERROR:
-          console.error('   💡 建议:');
-          console.error('      - 尝试切换到其他检测通道');
-          console.error('      - 稍后重试');
-          break;
-          
-        case TestProxyErrorCode.MULTIPLE_CHANNEL_TEST_FAILED:
-          console.error('   💡 建议:');
-          console.error('      - 所有检测通道都失败了，请检查代理配置');
-          if (error.errors) {
-            console.error('   📋 各通道错误详情:');
-            error.errors.forEach((e, i) => console.error(`      ${i + 1}. ${e.message}`));
-          }
-          break;
-          
-        case TestProxyErrorCode.UNKNOWN_ERROR:
-        default:
-          console.error('   💡 建议:');
-          console.error('      - 查看详细错误信息');
-          console.error('      - 联系技术支持');
-          break;
-      }
-    } else {
-      console.error('❌ 程序异常:', error);
-    }
-    
-    throw error; // 重新抛出错误供上层处理
-  }
-}
-```
-
 ## 依赖项
 
-- [axios](https://github.com/axios/axios) - HTTP 客户端
-- [https-proxy-agent](https://github.com/TooTallNate/proxy-agents) - HTTP/HTTPS 代理支持
-- [socks-proxy-agent](https://github.com/TooTallNate/proxy-agents) - SOCKS5/SOCKS5H 代理支持
+- [undici](https://github.com/nodejs/undici) - Node.js 官方 HTTP 客户端
 
 ## 测试
 

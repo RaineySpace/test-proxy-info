@@ -1,5 +1,16 @@
 # test-proxy-info
 
+## 1.0.0
+
+### Major Changes
+
+- 本次变更是一次重大重构，将 HTTP 客户端从 axios + https-proxy-agent + socks-proxy-agent 迁移到 Node.js 官方的 undici。主要变化包括：
+
+  1. 移除 SOCKS5/SOCKS5H 代理支持
+  2. 移除自定义错误码系统 (TestProxyError, TestProxyErrorCode)
+  3. 重构请求器为更简洁的 Fetcher 模式
+  4. 将通道实现移动到 src/channel/ 目录
+
 ## 0.3.0
 
 ### Minor Changes

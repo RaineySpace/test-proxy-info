@@ -1,41 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234 } from '../src/index';
-import { getProxyUrl, ProxyConfig } from '../src/common';
-import { createAxiosInstance } from '../src/requester';
+import { testProxyInfo, TestProxyChannel } from '../src/index';
+import { ProxyConfig, createProxyFetch } from '../src/requester';
 
 describe('example - 基本用法', () => {
   describe('工具函数', () => {
-    it('getProxyUrl: 转换代理配置为 URL', () => {
-      const config: ProxyConfig = {
-        protocol: 'http' as const,
-        host: 'proxy.example.com',
-        port: '8080',
-        username: 'user',
-        password: 'pass',
-      };
-
-      expect(getProxyUrl(config)).toBe('http://user:pass@proxy.example.com:8080');
+    it('createProxyFetch: 创建普通 fetcher', () => {
+      const fetcher = createProxyFetch();
+      expect(fetcher).toBeDefined();
+      expect(typeof fetcher).toBe('function');
     });
 
-    it('getProxyUrl: 直接返回 URL 字符串', () => {
-      const url = 'http://user:pass@proxy.example.com:8080';
-      expect(getProxyUrl(url)).toBe(url);
-    });
-
-    it('createAxiosInstance: 创建普通实例', () => {
-      const instance = createAxiosInstance();
-      expect(instance).toBeDefined();
-      expect(instance.defaults.httpAgent).toBeUndefined();
-    });
-
-    it('createAxiosInstance: 创建带代理的实例', () => {
-      const instance = createAxiosInstance({
+    it('createProxyFetch: 创建带代理的 fetcher', () => {
+      const fetcher = createProxyFetch({
         protocol: 'http',
         host: 'proxy.example.com',
         port: '8080',
       });
-      expect(instance).toBeDefined();
-      expect(instance.defaults.httpAgent).toBeDefined();
+      expect(fetcher).toBeDefined();
+      expect(typeof fetcher).toBe('function');
     });
   });
 
@@ -47,11 +29,6 @@ describe('example - 基本用法', () => {
 
     it('testProxyInfo: 返回 Promise（指定通道）', () => {
       const promise = testProxyInfo(undefined, TestProxyChannel.IP234);
-      expect(promise).toBeInstanceOf(Promise);
-    });
-
-    it('testProxyInfoByIp234: 返回 Promise', () => {
-      const promise = testProxyInfoByIp234();
       expect(promise).toBeInstanceOf(Promise);
     });
 

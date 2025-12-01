@@ -1,5 +1,5 @@
-import { TestProxyResult, TestProxyError, TestProxyErrorCode } from './common';
-import { createRequester, CreateRequesterOptions } from './requester';
+import { TestProxyResult } from '../common';
+import { Fetcher, CreateProxyFetchOptions, createProxyFetch } from '../requester';
 
 /**
  * IPInfo结果
@@ -28,12 +28,12 @@ interface IpInfoResult {
  * @param createRequesterOptions 创建请求器选项
  * @returns 代理测试结果
  */
-export async function testProxyInfoByIpInfo(createRequesterOptions?: CreateRequesterOptions): Promise<TestProxyResult> {
-  const requester = createRequester(createRequesterOptions);
+export async function testProxyInfoByIpInfo(options?: CreateProxyFetchOptions | Fetcher): Promise<TestProxyResult> {
+  const customFetch = typeof options === 'function' ? options : createProxyFetch(options);
   const startTime = Date.now();
-  const data = await requester.get<IpInfoResult>('https://ipinfo.io/json');
+  const data = await customFetch('https://ipinfo.io/json').then(res => res.json() as Promise<IpInfoResult>);
   const latency = Date.now() - startTime;
-  if (!data) throw new TestProxyError('IPInfo 检测渠道返回结果为空', TestProxyErrorCode.DETECTION_CHANNEL_ERROR);
+  if (!data) throw new Error('IPInfo 检测渠道返回结果为空');
   return {
     ip: data.ip,
     country: data.country,

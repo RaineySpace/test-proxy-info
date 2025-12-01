@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234, testProxyInfoByIpInfo } from '../src/index';
-import { getProxyUrl } from '../src/common';
-import { createAxiosInstance } from '../src/requester';
+import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234, testProxyInfoByIpInfo, createProxyFetch } from '../src/index';
 
 const skipIntegration = process.env.SKIP_INTEGRATION_TESTS === 'true';
 
@@ -45,7 +43,8 @@ describe.skipIf(skipIntegration)('集成测试', () => {
     }, 30000);
 
     it('应该能够通过testProxyByIp234直接调用', async () => {
-      const result = await testProxyInfoByIp234();
+      const fetcher = createProxyFetch();
+      const result = await testProxyInfoByIp234(fetcher);
 
       expect(result).toBeDefined();
       expect(result.ip).toBeDefined();
@@ -81,7 +80,8 @@ describe.skipIf(skipIntegration)('集成测试', () => {
     }, 30000);
 
     it('应该能够通过testProxyByIpInfo直接调用', async () => {
-      const result = await testProxyInfoByIpInfo();
+      const fetcher = createProxyFetch();
+      const result = await testProxyInfoByIpInfo(fetcher);
 
       expect(result).toBeDefined();
       expect(result.ip).toBeDefined();
@@ -93,24 +93,26 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       expect(result.latency).toBeLessThan(30000);
     }, 30000);
 
-    it('应该能够创建axios实例并发送请求（IP234）', async () => {
-      const axiosInstance = createAxiosInstance();
+    it('应该能够使用 createProxyFetch 发送请求（IP234）', async () => {
+      const fetcher = createProxyFetch();
       
-      const response = await axiosInstance.get('https://ip234.in/ip.json');
+      const response = await fetcher('https://ip234.in/ip.json');
+      const data = await response.json() as any;
 
-      expect(response.data).toBeDefined();
-      expect(response.data.ip).toBeDefined();
-      expect(response.data.country).toBeDefined();
+      expect(data).toBeDefined();
+      expect(data.ip).toBeDefined();
+      expect(data.country).toBeDefined();
     }, 30000);
 
-    it('应该能够创建axios实例并发送请求（IPInfo）', async () => {
-      const axiosInstance = createAxiosInstance();
+    it('应该能够使用 createProxyFetch 发送请求（IPInfo）', async () => {
+      const fetcher = createProxyFetch();
       
-      const response = await axiosInstance.get('https://ipinfo.io/json');
+      const response = await fetcher('https://ipinfo.io/json');
+      const data = await response.json() as any;
 
-      expect(response.data).toBeDefined();
-      expect(response.data.ip).toBeDefined();
-      expect(response.data.country).toBeDefined();
+      expect(data).toBeDefined();
+      expect(data.ip).toBeDefined();
+      expect(data.country).toBeDefined();
     }, 30000);
   });
 
@@ -169,7 +171,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       await expect(
         testProxyInfo(invalidProxy, TestProxyChannel.IP234)
       ).rejects.toThrow();
-    }, 30000);
+    }, 60000);
 
     it('应该处理无效的代理配置（IPInfo）', async () => {
       const invalidProxy = {
@@ -183,7 +185,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       await expect(
         testProxyInfo(invalidProxy, TestProxyChannel.IPInfo)
       ).rejects.toThrow();
-    }, 30000);
+    }, 60000);
 
     it('应该处理无效的代理URL（IP234）', async () => {
       const invalidProxyUrl = 'http://user:pass@invalid-host-12345.com:9999';
@@ -203,31 +205,11 @@ describe.skipIf(skipIntegration)('集成测试', () => {
   });
 
   describe('工具函数集成测试', () => {
-    it('getProxyUrl应该生成有效的URL格式', () => {
-      const config = {
-        protocol: 'http' as const,
-        host: 'proxy.example.com',
-        port: '8080',
-        username: 'testuser',
-        password: 'testpass',
-      };
-
-      const url = getProxyUrl(config);
+    it('createProxyFetch应该返回可用的 fetcher', () => {
+      const fetcher = createProxyFetch();
       
-      expect(url).toMatch(/^http:\/\//);
-      expect(url).toContain('proxy.example.com');
-      expect(url).toContain('8080');
-      expect(url).toContain('testuser');
-      expect(url).toContain('testpass');
-    });
-
-    it('createAxiosInstance应该返回可用的axios实例', () => {
-      const instance = createAxiosInstance();
-      
-      expect(instance.get).toBeDefined();
-      expect(instance.post).toBeDefined();
-      expect(instance.defaults).toBeDefined();
-      expect(typeof instance.get).toBe('function');
+      expect(fetcher).toBeDefined();
+      expect(typeof fetcher).toBe('function');
     });
   });
 });

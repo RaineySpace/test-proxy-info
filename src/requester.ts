@@ -1,108 +1,102 @@
-import { ProxyConfig, getProxyUrl } from './common';
-import axios, { AxiosInstance } from 'axios';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { TestProxyError, TestProxyErrorCode } from './common';
+import { ProxyAgent, fetch as undiciFetch, RequestInfo, RequestInit, Dispatcher } from 'undici';
 
 /**
- * 创建Axios实例
- * @param proxyConfig 代理配置或代理URL
- * @returns Axios实例
+ * 自定义请求器
  */
-export function createAxiosInstance(proxyConfig?: ProxyConfig | string): AxiosInstance {
-  let instance: AxiosInstance;
-  const proxyUrl = proxyConfig ? getProxyUrl(proxyConfig) : null;
-  if (proxyUrl) {
-    // 根据协议类型选择合适的 Agent
-    const agent = proxyUrl.startsWith('socks5') ? new SocksProxyAgent(proxyUrl) : new HttpsProxyAgent(proxyUrl);
+export type Fetcher = typeof undiciFetch;
 
-    instance = axios.create({ httpAgent: agent, httpsAgent: agent, timeout: 30000 });
-  } else {
-    instance = axios.create({ timeout: 30000 });
-  }
-
-  instance.interceptors.response.use(response => response, error => {
-    const errorMessage = error.message || '未知错误';
-    // 1. 代理服务器异常 - 代理相关的连接错误
-    const isProxyError =
-      !!proxyConfig &&
-      ((proxyUrl && errorMessage.includes(proxyUrl)) ||
-        errorMessage.includes("Proxy") ||
-        errorMessage.includes("ECONNREFUSED") ||
-        errorMessage.includes("407") || // Proxy Authentication Required
-        error.code === "ECONNREFUSED" ||
-        error.code === "ECONNRESET");
-    if (isProxyError) {
-      throw new TestProxyError(
-        `代理服务器连接失败: ${errorMessage}`,
-        TestProxyErrorCode.PROXY_SERVER_ERROR
-      );
-    }
-
-    // 2. 检测渠道异常 - HTTP 状态码相关错误
-    if (error.response) {
-      const status = error.response.status;
-      // 检测服务返回了错误状态码(如 403, 500, 502, 503 等)
-      if (status >= 400) {
-        throw new TestProxyError(
-          `检测渠道返回错误状态码: ${status}`,
-          TestProxyErrorCode.DETECTION_CHANNEL_ERROR
-        );
-      }
-    }
-  
-    // 3. 网络异常 - 一般性网络问题
-    const isNetworkError =
-      error.code === "ETIMEDOUT" ||
-      error.code === "ENOTFOUND" ||
-      error.code === "ENETUNREACH" ||
-      error.code === "EAI_AGAIN" ||
-      errorMessage.includes("timeout") ||
-      errorMessage.includes("network");
-    if (isNetworkError) {
-      throw new TestProxyError(
-        `网络连接失败: ${errorMessage}`,
-        TestProxyErrorCode.NETWORK_ERROR
-      );
-    }
-  
-    // 4. 程序性异常 - 其他未知错误
-    throw new TestProxyError(errorMessage);
-  });
-  return instance;
+/**
+ * 代理配置
+ */
+export interface ProxyConfig {
+  /** 协议 */
+  protocol: 'http' | 'https';
+  /** 主机 */
+  host: string;
+  /** 端口 */
+  port?: string | number;
+  /** 用户名 */
+  username?: string;
+  /** 密码 */
+  password?: string;
 }
 
 /**
- * 请求器
+ * Check if the value is a valid http or https prefixed string.
+ *
+ * @param {string} value
+ * @returns {boolean}
  */
-export interface Requester {
-  get: <T = any>(url: string) => Promise<T>;
-  post: <T = any, D = any>(url: string, data: D) => Promise<T>;
+function isHttpOrHttpsPrefixed (value: string): boolean {
+  return (
+    value != null &&
+    value[0] === 'h' &&
+    value[1] === 't' &&
+    value[2] === 't' &&
+    value[3] === 'p' &&
+    (
+      value[4] === ':' ||
+      (
+        value[4] === 's' &&
+        value[5] === ':'
+      )
+    )
+  )
+}
+
+/**
+ * 获取代理URL
+ * @param proxyConfig 代理配置或代理URL
+ * @returns 代理URL
+ */
+function compositeProxy(proxyConfig: ProxyConfig): string {
+  let url = `${proxyConfig.protocol}://`;
+  
+  // 添加认证信息
+  if (proxyConfig.username && proxyConfig.password) {
+    url += `${proxyConfig.username}:${proxyConfig.password}@`;
+  }
+  
+  // 添加主机和端口
+  url += proxyConfig.host;
+  if (proxyConfig.port) {
+    url += `:${proxyConfig.port}`;
+  }
+  
+  return url;
+}
+
+function createDispatcher(proxyConfig: ProxyConfig | string): Dispatcher {
+  let proxyUri: string;
+  if (typeof proxyConfig === 'string') {
+    proxyUri = proxyConfig;
+  } else {
+    proxyUri = compositeProxy(proxyConfig);
+  }
+  if (!isHttpOrHttpsPrefixed(proxyUri)) {
+    throw new Error(`Invalid Proxy URL protocol: the URL must start with http: or https:.`);
+  }
+  return new ProxyAgent({ uri: proxyUri });
 }
 
 /**
  * 创建请求器选项
  */
-export type CreateRequesterOptions = ProxyConfig | string | Requester;
+export type CreateProxyFetchOptions = ProxyConfig | string;
 
 /**
- * 创建请求器
- * @param proxyConfig 代理配置或代理URL
- * @returns 请求器
+ * 创建代理请求器
+ * @param proxyConfig 代理配置或代理请求器
+ * @returns 代理请求器
  */
-export function createRequester(proxyConfig?: CreateRequesterOptions): Requester {
-  if (proxyConfig && typeof proxyConfig === 'object' && 'get' in proxyConfig && 'post' in proxyConfig) {
-    return proxyConfig;
-  }
-  const axiosInstance = createAxiosInstance(proxyConfig);
-  return {
-    get: async (url) => {
-      const { data } = await axiosInstance.get(url);
-      return data;
-    },
-    post: async (url, data) => {
-      const { data: responseData } = await axiosInstance.post(url, data);
-      return responseData;
-    },
-  }
+const DEFAULT_TIMEOUT = 3000;
+
+export function createProxyFetch(proxyConfig?: CreateProxyFetchOptions): Fetcher {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    return await undiciFetch(input, {
+      ...init,
+      signal: init?.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT),
+      dispatcher: proxyConfig ? createDispatcher(proxyConfig) : undefined
+    });
+  };
 }
