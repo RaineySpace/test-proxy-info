@@ -1,9 +1,9 @@
-import { ProxyAgent, fetch as undiciFetch, RequestInfo, RequestInit, Dispatcher } from 'undici';
+import { ProxyAgent, fetch as undiciFetch, Dispatcher } from 'undici';
 
 /**
  * 自定义请求器
  */
-export type Fetcher = typeof undiciFetch;
+export type Fetcher = (input: string | Request, init?: RequestInit) => Promise<Response>;
 
 /**
  * 代理配置
@@ -92,11 +92,11 @@ export type CreateProxyFetchOptions = ProxyConfig | string;
 const DEFAULT_TIMEOUT = 3000;
 
 export function createProxyFetch(proxyConfig?: CreateProxyFetchOptions): Fetcher {
-  return async (input: RequestInfo | URL, init?: RequestInit) => {
+  return async (input, init) => {
     return await undiciFetch(input, {
       ...init,
       signal: init?.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT),
-      dispatcher: proxyConfig ? createDispatcher(proxyConfig) : undefined
+      dispatcher: proxyConfig ? createDispatcher(proxyConfig) : undefined,
     });
   };
 }

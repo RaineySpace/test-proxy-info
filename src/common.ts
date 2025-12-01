@@ -14,7 +14,7 @@ export interface TestProxyResult {
   timezone: string;
   /** 延迟（毫秒） */
   latency: number;
-};
+}
 
 /**
  * 代理测试通道
@@ -24,4 +24,4 @@ export enum TestProxyChannel {
   IP234 = 'ip234',
   /** IPInfo 测试通道 */
   IPInfo = 'ip_info',
-};
+}

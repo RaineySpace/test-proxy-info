@@ -1,5 +1,11 @@
 # test-proxy-info
 
+## 1.0.1
+
+### Patch Changes
+
+- 修改 Fetcher 类型定义，使其与标准 fetch API 保持一致
+
 ## 1.0.0
 
 ### Major Changes

@@ -215,7 +215,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
 });
 
 if (skipIntegration) {
-  console.log('\n⚠️  集成测试已跳过。要运行集成测试，请设置环境变量 SKIP_INTEGRATION_TESTS=false\n');
+  console.warn('\n⚠️  集成测试已跳过。要运行集成测试，请设置环境变量 SKIP_INTEGRATION_TESTS=false\n');
 } else {
-  console.log('\n✓ 运行集成测试（需要网络连接）\n');
+  console.warn('\n✓ 运行集成测试（需要网络连接）\n');
 }
