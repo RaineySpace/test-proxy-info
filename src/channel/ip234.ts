@@ -1,4 +1,4 @@
-import { TestProxyResult } from '../common';
+import { TestProxyResult, TestProxyChannel } from '../common';
 import { Fetcher, CreateProxyFetchOptions, createProxyFetch } from '../requester';
 
 /**
@@ -51,7 +51,7 @@ export async function testProxyInfoByIp234(options?: CreateProxyFetchOptions | F
   const startTime = Date.now();
   const data = await customFetch('https://ip234.in/ip.json').then(res => res.json() as Promise<Ip234Result>);
   const latency = Date.now() - startTime;
-  if (!data) throw new Error('IP234 检测渠道返回结果为空');
+  if (!data) throw new Error('IP234 检测渠道异常');
   return {
     ip: data.ip,
     country: data.country,
@@ -59,6 +59,7 @@ export async function testProxyInfoByIp234(options?: CreateProxyFetchOptions | F
     city: data.city,
     timezone: data.timezone,
     latency,
+    channel: TestProxyChannel.IP234,
   }
 }
 

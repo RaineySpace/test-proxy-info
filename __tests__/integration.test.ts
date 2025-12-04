@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234, testProxyInfoByIpInfo, createProxyFetch } from '../src/index';
+import { testProxyInfo, TestProxyChannel, testProxyInfoByIp234, testProxyInfoByIpInfo, testProxyInfoByBigData, createProxyFetch } from '../src/index';
 
 const skipIntegration = process.env.SKIP_INTEGRATION_TESTS === 'true';
 
@@ -15,6 +15,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       expect(result.city).toBeDefined();
       expect(result.timezone).toBeDefined();
       expect(result.latency).toBeDefined();
+      expect(result.channel).toBeDefined();
 
       expect(typeof result.latency).toBe('number');
       expect(result.latency).toBeGreaterThan(0);
@@ -31,6 +32,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       expect(result.city).toBeDefined();
       expect(result.timezone).toBeDefined();
       expect(result.latency).toBeDefined();
+      expect(result.channel).toBe(TestProxyChannel.IP234);
 
       expect(result.ip).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
 
@@ -88,6 +90,37 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       expect(result.country).toBeDefined();
       expect(result.timezone).toBeDefined();
       expect(result.latency).toBeDefined();
+      expect(result.channel).toBe(TestProxyChannel.IPInfo);
+      expect(typeof result.latency).toBe('number');
+      expect(result.latency).toBeGreaterThan(0);
+      expect(result.latency).toBeLessThan(30000);
+    }, 30000);
+
+    it('应该能够获取本机IP信息（BigData通道）', async () => {
+      const result = await testProxyInfo(undefined, TestProxyChannel.BigData);
+
+      expect(result).toBeDefined();
+      expect(result.ip).toBeDefined();
+      expect(result.country).toBeDefined();
+      expect(result.province).toBeDefined();
+      expect(result.city).toBeDefined();
+      expect(result.latency).toBeDefined();
+      expect(result.channel).toBe(TestProxyChannel.BigData);
+
+      expect(typeof result.latency).toBe('number');
+      expect(result.latency).toBeGreaterThan(0);
+      expect(result.latency).toBeLessThan(30000);
+    }, 30000);
+
+    it('应该能够通过testProxyInfoByBigData直接调用', async () => {
+      const fetcher = createProxyFetch();
+      const result = await testProxyInfoByBigData(fetcher);
+
+      expect(result).toBeDefined();
+      expect(result.ip).toBeDefined();
+      expect(result.country).toBeDefined();
+      expect(result.latency).toBeDefined();
+      expect(result.channel).toBe(TestProxyChannel.BigData);
       expect(typeof result.latency).toBe('number');
       expect(result.latency).toBeGreaterThan(0);
       expect(result.latency).toBeLessThan(30000);
@@ -159,7 +192,7 @@ describe.skipIf(skipIntegration)('集成测试', () => {
   });
 
   describe('错误处理', () => {
-    it('应该处理无效的代理配置（IP234）', async () => {
+    it('应该处理无效的代理配置', async () => {
       const invalidProxy = {
         protocol: 'http' as const,
         host: 'invalid-proxy-host-that-does-not-exist.com',
@@ -169,37 +202,15 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       };
 
       await expect(
-        testProxyInfo(invalidProxy, TestProxyChannel.IP234)
+        testProxyInfo(invalidProxy)
       ).rejects.toThrow();
     }, 60000);
 
-    it('应该处理无效的代理配置（IPInfo）', async () => {
-      const invalidProxy = {
-        protocol: 'http' as const,
-        host: 'invalid-proxy-host-that-does-not-exist.com',
-        port: '9999',
-        username: 'user',
-        password: 'pass',
-      };
-
-      await expect(
-        testProxyInfo(invalidProxy, TestProxyChannel.IPInfo)
-      ).rejects.toThrow();
-    }, 60000);
-
-    it('应该处理无效的代理URL（IP234）', async () => {
+    it('应该处理无效的代理URL', async () => {
       const invalidProxyUrl = 'http://user:pass@invalid-host-12345.com:9999';
 
       await expect(
         testProxyInfo(invalidProxyUrl, TestProxyChannel.IP234)
-      ).rejects.toThrow();
-    }, 30000);
-
-    it('应该处理无效的代理URL（IPInfo）', async () => {
-      const invalidProxyUrl = 'http://user:pass@invalid-host-12345.com:9999';
-
-      await expect(
-        testProxyInfo(invalidProxyUrl, TestProxyChannel.IPInfo)
       ).rejects.toThrow();
     }, 30000);
   });

@@ -14,7 +14,7 @@
 - ✅ 获取代理地理位置信息（国家、省份、城市、时区）
 - ✅ 测量请求延迟（latency）
 - ✅ 支持用户名/密码认证
-- ✅ 支持多种测试通道（IP234、IPInfo）
+- ✅ 支持多种测试通道（IP234、IPInfo、BigData）
 - ✅ 多通道并发测试，自动返回最快成功的结果
 - ✅ 基于 undici 的高性能 HTTP 客户端
 - ✅ TypeScript 类型支持
@@ -83,7 +83,8 @@ console.log('代理测试结果:', result);
 //   province: 'California',
 //   city: 'San Francisco',
 //   timezone: 'America/Los_Angeles',
-//   latency: 245  // 请求延迟（毫秒）
+//   latency: 245,  // 请求延迟（毫秒）
+//   channel: 'IP234'  // 测试通道
 // }
 
 // 指定 IP234 通道测试
@@ -94,12 +95,16 @@ console.log('代理测试结果:', result2);
 const result3 = await testProxyInfo(proxyConfig, TestProxyChannel.IPInfo);
 console.log('代理测试结果:', result3);
 
+// 指定 BigData 通道测试
+const result4 = await testProxyInfo(proxyConfig, TestProxyChannel.BigData);
+console.log('代理测试结果:', result4);
+
 // 使用多通道测试（返回第一个成功的结果）
-const result4 = await testProxyInfo(
+const result5 = await testProxyInfo(
   proxyConfig,
-  [TestProxyChannel.IP234, TestProxyChannel.IPInfo]
+  [TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]
 );
-console.log('多通道测试结果:', result4);
+console.log('多通道测试结果:', result5);
 ```
 
 ### 使用代理 URL
@@ -192,8 +197,9 @@ test();
 - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
   - `TestProxyChannel.IP234` - 使用 IP234 服务
   - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
+  - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务
   - 传入数组时，会并发测试所有通道，返回第一个成功的结果
-  - 默认值：使用所有通道 `[TestProxyChannel.IP234, TestProxyChannel.IPInfo]`
+  - 默认值：使用所有通道 `[TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]`
 
 **返回值：**
 
@@ -201,12 +207,13 @@ test();
 
 ```typescript
 {
-  ip: string;        // 出口 IP 地址
-  country: string;   // 国家/地区
-  province: string;  // 省份
-  city: string;      // 城市
-  timezone: string;  // 时区
-  latency: number;   // 请求延迟（毫秒）
+  ip: string;                  // 出口 IP 地址
+  country: string;             // 国家/地区
+  province: string;            // 省份
+  city: string;                // 城市
+  timezone: string;            // 时区
+  latency: number;             // 请求延迟（毫秒）
+  channel: TestProxyChannel;   // 测试通道
 }
 ```
 
@@ -253,12 +260,13 @@ interface ProxyConfig {
 
 ```typescript
 interface TestProxyResult {
-  ip: string;        // 出口 IP 地址
-  country: string;   // 国家/地区
-  province: string;  // 省份
-  city: string;      // 城市
-  timezone: string;  // 时区
-  latency: number;   // 请求延迟（毫秒）
+  ip: string;                  // 出口 IP 地址
+  country: string;             // 国家/地区
+  province: string;            // 省份
+  city: string;                // 城市
+  timezone: string;            // 时区
+  latency: number;             // 请求延迟（毫秒）
+  channel: TestProxyChannel;   // 测试通道
 }
 ```
 
@@ -266,8 +274,9 @@ interface TestProxyResult {
 
 ```typescript
 enum TestProxyChannel {
-  IP234 = 'ip234',      // IP234 测试通道
-  IPInfo = 'ip_info'    // IPInfo 测试通道
+  IP234 = 'IP234',      // IP234 测试通道
+  IPInfo = 'IPInfo',    // IPInfo 测试通道
+  BigData = 'BigData'   // BigDataCloud 测试通道
 }
 ```
 
@@ -308,6 +317,7 @@ async function testProxy() {
     console.log(`位置: ${result.country} ${result.province} ${result.city}`);
     console.log(`时区: ${result.timezone}`);
     console.log(`延迟: ${result.latency}ms`);
+    console.log(`通道: ${result.channel}`);
     
     // 方式 2: 使用 URL 字符串
     const url = 'http://myuser:mypass@proxy.example.com:10021';

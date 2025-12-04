@@ -1,6 +1,6 @@
 import { TestProxyResult, TestProxyChannel } from './common';
 import { CreateProxyFetchOptions, createProxyFetch, Fetcher } from './requester';
-import { testProxyInfoByIp234, testProxyInfoByIpInfo } from './channel';
+import { testProxyInfoByIp234, testProxyInfoByIpInfo, testProxyInfoByBigData } from './channel';
 
 /**
  * 代理测试
@@ -38,6 +38,9 @@ export async function testProxyInfo(
     /** 测试 IPInfo 通道 */
     case TestProxyChannel.IPInfo:
       return await testProxyInfoByIpInfo(createProxyFetchOptions);
+    /** 测试 BigData 通道 */
+    case TestProxyChannel.BigData:
+      return await testProxyInfoByBigData(createProxyFetchOptions);
     /** 在不支持的通道时，抛出错误 */
     default:
       throw new Error(`不支持的通道: ${channel}`);

@@ -3,9 +3,11 @@ import { testProxyInfo, TestProxyChannel } from '../src/index';
 import { ProxyConfig } from '../src/requester';
 import * as ip234Module from '../src/channel/ip234';
 import * as ipInfoModule from '../src/channel/ip-info';
+import * as bigDataModule from '../src/channel/big-data';
 
 vi.mock('../src/channel/ip234');
 vi.mock('../src/channel/ip-info');
+vi.mock('../src/channel/big-data');
 
 describe('index - testProxyInfo 函数', () => {
   const mockResult = {
@@ -15,6 +17,7 @@ describe('index - testProxyInfo 函数', () => {
     city: 'San Francisco',
     timezone: 'America/Los_Angeles',
     latency: 100,
+    channel: TestProxyChannel.IP234,
   };
 
   beforeEach(() => {
@@ -105,10 +108,53 @@ describe('index - testProxyInfo 函数', () => {
     });
   });
 
+  describe('使用 BigData 通道', () => {
+    it('应该在指定 BigData 通道时使用 testProxyInfoByBigData', async () => {
+      const bigDataResult = { ...mockResult, channel: TestProxyChannel.BigData };
+      vi.mocked(bigDataModule.default).mockResolvedValue(bigDataResult);
+
+      const result = await testProxyInfo(undefined, TestProxyChannel.BigData);
+
+      expect(result).toEqual(bigDataResult);
+      expect(bigDataModule.default).toHaveBeenCalledWith(undefined);
+    });
+
+    it('应该传递 ProxyConfig 对象到 BigData', async () => {
+      const bigDataResult = { ...mockResult, channel: TestProxyChannel.BigData };
+      vi.mocked(bigDataModule.default).mockResolvedValue(bigDataResult);
+
+      const proxyConfig: ProxyConfig = {
+        protocol: 'http',
+        host: 'proxy.example.com',
+        port: '8080',
+        username: 'user',
+        password: 'pass',
+      };
+
+      const result = await testProxyInfo(proxyConfig, TestProxyChannel.BigData);
+
+      expect(result).toEqual(bigDataResult);
+      expect(bigDataModule.default).toHaveBeenCalledWith(proxyConfig);
+    });
+
+    it('应该传递代理 URL 字符串到 BigData', async () => {
+      const bigDataResult = { ...mockResult, channel: TestProxyChannel.BigData };
+      vi.mocked(bigDataModule.default).mockResolvedValue(bigDataResult);
+
+      const proxyUrl = 'http://user:pass@proxy.example.com:8080';
+
+      const result = await testProxyInfo(proxyUrl, TestProxyChannel.BigData);
+
+      expect(result).toEqual(bigDataResult);
+      expect(bigDataModule.default).toHaveBeenCalledWith(proxyUrl);
+    });
+  });
+
   describe('默认通道（所有通道）', () => {
     it('应该在不指定通道时使用所有通道', async () => {
       vi.mocked(ip234Module.default).mockResolvedValue(mockResult);
-      vi.mocked(ipInfoModule.default).mockResolvedValue(mockResult);
+      vi.mocked(ipInfoModule.default).mockResolvedValue({ ...mockResult, channel: TestProxyChannel.IPInfo });
+      vi.mocked(bigDataModule.default).mockResolvedValue({ ...mockResult, channel: TestProxyChannel.BigData });
 
       const proxyConfig: ProxyConfig = {
         protocol: 'http',
@@ -118,9 +164,10 @@ describe('index - testProxyInfo 函数', () => {
 
       const result = await testProxyInfo(proxyConfig);
 
-      expect(result).toEqual(mockResult);
+      expect(result.ip).toEqual(mockResult.ip);
       expect(ip234Module.default).toHaveBeenCalledWith(expect.any(Function));
       expect(ipInfoModule.default).toHaveBeenCalledWith(expect.any(Function));
+      expect(bigDataModule.default).toHaveBeenCalledWith(expect.any(Function));
     });
   });
 
@@ -159,7 +206,7 @@ describe('index - testProxyInfo 函数', () => {
 
     it('应该传递代理配置到所有通道', async () => {
       vi.mocked(ip234Module.default).mockResolvedValue(mockResult);
-      vi.mocked(ipInfoModule.default).mockResolvedValue(mockResult);
+      vi.mocked(ipInfoModule.default).mockResolvedValue({ ...mockResult, channel: TestProxyChannel.IPInfo });
 
       const proxyConfig: ProxyConfig = {
         protocol: 'http',
@@ -172,12 +219,22 @@ describe('index - testProxyInfo 函数', () => {
       expect(ip234Module.default).toHaveBeenCalledWith(expect.any(Function));
       expect(ipInfoModule.default).toHaveBeenCalledWith(expect.any(Function));
     });
+
+    it('应该在 BigData 通道失败时返回其他通道结果', async () => {
+      vi.mocked(bigDataModule.default).mockRejectedValue(new Error('BigData failed'));
+      vi.mocked(ip234Module.default).mockResolvedValue(mockResult);
+
+      const result = await testProxyInfo(undefined, [TestProxyChannel.BigData, TestProxyChannel.IP234]);
+
+      expect(result).toEqual(mockResult);
+    });
   });
 
   describe('TestProxyChannel 枚举', () => {
     it('应该有正确的枚举值', () => {
-      expect(TestProxyChannel.IP234).toBe('ip234');
-      expect(TestProxyChannel.IPInfo).toBe('ip_info');
+      expect(TestProxyChannel.IP234).toBe('IP234');
+      expect(TestProxyChannel.IPInfo).toBe('IPInfo');
+      expect(TestProxyChannel.BigData).toBe('BigData');
     });
   });
 });

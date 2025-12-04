@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { testProxyInfoByIp234 } from '../src/channel/ip234';
+import { TestProxyChannel } from '../src/common';
 
 describe('ip234', () => {
   beforeEach(() => {
@@ -53,6 +54,7 @@ describe('ip234', () => {
         city: 'San Francisco',
         timezone: 'America/Los_Angeles',
         latency: expect.any(Number),
+        channel: TestProxyChannel.IP234,
       });
       expect(result.latency).toBeGreaterThanOrEqual(0);
 
@@ -62,7 +64,7 @@ describe('ip234', () => {
     it('应该在API返回空数据时抛出错误', async () => {
       const mockFetcher = createMockFetcher(null);
 
-      await expect(testProxyInfoByIp234(mockFetcher)).rejects.toThrow('IP234 检测渠道返回结果为空');
+      await expect(testProxyInfoByIp234(mockFetcher)).rejects.toThrow('IP234 检测渠道异常');
     });
 
     it('应该处理网络错误', async () => {
@@ -102,6 +104,7 @@ describe('ip234', () => {
       expect(result).toHaveProperty('city');
       expect(result).toHaveProperty('timezone');
       expect(result).toHaveProperty('latency');
+      expect(result).toHaveProperty('channel');
 
       expect(typeof result.ip).toBe('string');
       expect(typeof result.country).toBe('string');
@@ -109,6 +112,7 @@ describe('ip234', () => {
       expect(typeof result.city).toBe('string');
       expect(typeof result.timezone).toBe('string');
       expect(typeof result.latency).toBe('number');
+      expect(result.channel).toBe(TestProxyChannel.IP234);
     });
 
     it('应该正确计算延迟', async () => {

@@ -66,8 +66,9 @@ describe('example - 基本用法', () => {
     });
 
     it('TestProxyChannel: 枚举值', () => {
-      expect(TestProxyChannel.IP234).toBe('ip234');
-      expect(TestProxyChannel.IPInfo).toBe('ip_info');
+      expect(TestProxyChannel.IP234).toBe('IP234');
+      expect(TestProxyChannel.IPInfo).toBe('IPInfo');
+      expect(TestProxyChannel.BigData).toBe('BigData');
     });
   });
 });
