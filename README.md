@@ -103,7 +103,7 @@ console.log('代理测试结果:', result4);
 const result5 = await testProxyInfo(proxyConfig, TestProxyChannel.IPCC);
 console.log('代理测试结果:', result5);
 
-// 指定 IP9 通道测试（仅支持中国 IP）
+// 指定 IP9 通道测试
 const result6 = await testProxyInfo(proxyConfig, TestProxyChannel.IP9);
 console.log('代理测试结果:', result6);
 
@@ -205,9 +205,9 @@ test();
 - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
   - `TestProxyChannel.IP234` - 使用 IP234 服务
   - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
-  - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务
+  - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务（不提供时区信息）
   - `TestProxyChannel.IPCC` - 使用 IP.CC 服务
-  - `TestProxyChannel.IP9` - 使用 IP9 服务（仅支持中国 IP，不提供时区信息）
+  - `TestProxyChannel.IP9` - 使用 IP9 服务（不提供时区信息）
   - 传入数组时，会并发测试所有通道，返回第一个成功的结果
   - 默认值：使用所有通道
 
@@ -288,7 +288,7 @@ enum TestProxyChannel {
   IPInfo = 'IPInfo',    // IPInfo 测试通道
   BigData = 'BigData',  // BigDataCloud 测试通道
   IPCC = 'IPCC',        // IP.CC 测试通道
-  IP9 = 'IP9'           // IP9 测试通道（仅支持中国 IP）
+  IP9 = 'IP9'           // IP9 测试通道
 }
 ```
 
