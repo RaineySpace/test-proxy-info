@@ -56,13 +56,13 @@ describe('big-data', () => {
         country: 'United States',
         province: 'California',
         city: 'San Francisco',
-        timezone: '',
+        timezone: undefined,
         latency: expect.any(Number),
         channel: TestProxyChannel.BigData,
       });
       expect(result.latency).toBeGreaterThanOrEqual(0);
 
-      expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en');
+      expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-hans');
       expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/client-ip');
     });
 
@@ -125,7 +125,7 @@ describe('big-data', () => {
       expect(typeof result.country).toBe('string');
       expect(typeof result.province).toBe('string');
       expect(typeof result.city).toBe('string');
-      expect(typeof result.timezone).toBe('string');
+      expect(result.timezone).toBeUndefined();
       expect(typeof result.latency).toBe('number');
       expect(result.channel).toBe(TestProxyChannel.BigData);
     });

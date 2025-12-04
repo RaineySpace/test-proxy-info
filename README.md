@@ -14,7 +14,7 @@
 - ✅ 获取代理地理位置信息（国家、省份、城市、时区）
 - ✅ 测量请求延迟（latency）
 - ✅ 支持用户名/密码认证
-- ✅ 支持多种测试通道（IP234、IPInfo、BigData）
+- ✅ 支持多种测试通道（IP234、IPInfo、BigData、IPCC、IP9）
 - ✅ 多通道并发测试，自动返回最快成功的结果
 - ✅ 基于 undici 的高性能 HTTP 客户端
 - ✅ TypeScript 类型支持
@@ -98,6 +98,14 @@ console.log('代理测试结果:', result3);
 // 指定 BigData 通道测试
 const result4 = await testProxyInfo(proxyConfig, TestProxyChannel.BigData);
 console.log('代理测试结果:', result4);
+
+// 指定 IPCC 通道测试
+const result5 = await testProxyInfo(proxyConfig, TestProxyChannel.IPCC);
+console.log('代理测试结果:', result5);
+
+// 指定 IP9 通道测试（仅支持中国 IP）
+const result6 = await testProxyInfo(proxyConfig, TestProxyChannel.IP9);
+console.log('代理测试结果:', result6);
 
 // 使用多通道测试（返回第一个成功的结果）
 const result5 = await testProxyInfo(
@@ -198,8 +206,10 @@ test();
   - `TestProxyChannel.IP234` - 使用 IP234 服务
   - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
   - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务
+  - `TestProxyChannel.IPCC` - 使用 IP.CC 服务
+  - `TestProxyChannel.IP9` - 使用 IP9 服务（仅支持中国 IP，不提供时区信息）
   - 传入数组时，会并发测试所有通道，返回第一个成功的结果
-  - 默认值：使用所有通道 `[TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]`
+  - 默认值：使用所有通道
 
 **返回值：**
 
@@ -276,7 +286,9 @@ interface TestProxyResult {
 enum TestProxyChannel {
   IP234 = 'IP234',      // IP234 测试通道
   IPInfo = 'IPInfo',    // IPInfo 测试通道
-  BigData = 'BigData'   // BigDataCloud 测试通道
+  BigData = 'BigData',  // BigDataCloud 测试通道
+  IPCC = 'IPCC',        // IP.CC 测试通道
+  IP9 = 'IP9'           // IP9 测试通道（仅支持中国 IP）
 }
 ```
 

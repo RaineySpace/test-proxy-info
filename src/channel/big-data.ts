@@ -42,7 +42,7 @@ export async function testProxyInfoByBigData(options?: CreateProxyFetchOptions |
   const customFetch = typeof options === 'function' ? options : createProxyFetch(options);
   const startTime = Date.now();
   const [data, { ipString }] = await Promise.all([
-    customFetch("https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en").then(res => res.json() as Promise<BigDataResult>),
+    customFetch("https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-hans").then(res => res.json() as Promise<BigDataResult>),
     customFetch("https://api.bigdatacloud.net/data/client-ip").then(res => res.json() as Promise<{ ipString: string }>),
   ]);
   const latency = Date.now() - startTime;
@@ -52,7 +52,7 @@ export async function testProxyInfoByBigData(options?: CreateProxyFetchOptions |
     country: data.countryName,
     province: data.principalSubdivision,
     city: data.city,
-    timezone: '', // BigDataCloud 不提供时区信息
+    timezone: undefined, // BigDataCloud 不提供时区信息
     latency,
     channel: TestProxyChannel.BigData,
   }

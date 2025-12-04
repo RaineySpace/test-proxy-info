@@ -13,7 +13,9 @@ describe.skipIf(skipIntegration)('集成测试', () => {
       expect(result.country).toBeDefined();
       expect(result.province).toBeDefined();
       expect(result.city).toBeDefined();
-      expect(result.timezone).toBeDefined();
+      if (result.channel !== TestProxyChannel.IP9) {
+        expect(result.timezone).toBeDefined();
+      }
       expect(result.latency).toBeDefined();
       expect(result.channel).toBeDefined();
 

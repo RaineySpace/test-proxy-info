@@ -1,5 +1,13 @@
 # test-proxy-info
 
+## 1.1.0
+
+### Minor Changes
+
+- 新增 ip-cc 和 ip9 两个渠道
+- 修改当前默认返回的语言为中文
+- 337ab9e: 新增 big-data 检测渠道,并在检测结果返回中新增渠道字段
+
 ## 1.0.1
 
 ### Patch Changes

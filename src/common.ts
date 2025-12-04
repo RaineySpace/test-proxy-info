@@ -8,6 +8,10 @@ export enum TestProxyChannel {
   IPInfo = 'IPInfo',
   /** BigData测试通道 */
   BigData = 'BigData',
+  /** IPCC 测试通道 */
+  IPCC = 'IPCC',
+  /** IP9 测试通道 */
+  IP9 = 'IP9',
 }
 
 /**
@@ -22,8 +26,8 @@ export interface TestProxyResult {
   province: string;
   /** 城市 */
   city: string;
-  /** 时区 */
-  timezone: string;
+  /** 时区（部分渠道可能不提供） */
+  timezone?: string;
   /** 延迟（毫秒） */
   latency: number;
   /** 测试通道 */
