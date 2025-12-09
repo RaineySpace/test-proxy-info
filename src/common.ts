@@ -15,6 +15,45 @@ export enum TestProxyChannel {
 }
 
 /**
+ * 自定义请求器
+ */
+export type Fetcher = (input: string | Request, init?: RequestInit) => Promise<Response>;
+
+/**
+ * 代理配置
+ */
+export interface ProxyConfig {
+  /** 协议 */
+  protocol: 'http' | 'https';
+  /** 主机 */
+  host: string;
+  /** 端口 */
+  port?: string | number;
+  /** 用户名 */
+  username?: string;
+  /** 密码 */
+  password?: string;
+}
+
+/**
+ * 单通道代理测试选项
+ */
+export interface SimpleTestProxyOptions {
+  /** 创建请求器选项 */
+  fetcher?: Fetcher;
+  /** 代理配置 */
+  proxy?: ProxyConfig | string;
+}
+
+/**
+ * 测试选项
+ */
+export interface TestProxyOptions extends SimpleTestProxyOptions {
+  /** 测试通道 */
+  channel?: TestProxyChannel | TestProxyChannel[];
+}
+
+/**
  * 代理测试结果
  */
 export interface TestProxyResult {

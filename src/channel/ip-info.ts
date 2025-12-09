@@ -1,5 +1,5 @@
-import { TestProxyResult, TestProxyChannel } from '../common';
-import { Fetcher, CreateProxyFetchOptions, createProxyFetch } from '../requester';
+import { TestProxyResult, TestProxyChannel, SimpleTestProxyOptions } from '../common';
+import { createProxyFetch } from '../requester';
 
 /**
  * IPInfo结果
@@ -28,8 +28,8 @@ interface IpInfoResult {
  * @param createRequesterOptions 创建请求器选项
  * @returns 代理测试结果
  */
-export async function testProxyInfoByIpInfo(options?: CreateProxyFetchOptions | Fetcher): Promise<TestProxyResult> {
-  const customFetch = typeof options === 'function' ? options : createProxyFetch(options);
+export async function testProxyInfoByIpInfo(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
+  const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
   const data = await customFetch('https://ipinfo.io/json').then(res => res.json() as Promise<IpInfoResult>);
   const latency = Date.now() - startTime;

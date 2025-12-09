@@ -74,7 +74,7 @@ const proxyConfig = {
 };
 
 // 使用默认通道测试（自动使用所有通道，返回最快成功的结果）
-const result = await testProxyInfo(proxyConfig);
+const result = await testProxyInfo({ proxy: proxyConfig });
 console.log('代理测试结果:', result);
 // 输出示例:
 // {
@@ -88,45 +88,31 @@ console.log('代理测试结果:', result);
 // }
 
 // 指定 IP234 通道测试
-const result2 = await testProxyInfo(proxyConfig, TestProxyChannel.IP234);
+const result2 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP234 });
 console.log('代理测试结果:', result2);
 
 // 指定 IPInfo 通道测试
-const result3 = await testProxyInfo(proxyConfig, TestProxyChannel.IPInfo);
+const result3 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IPInfo });
 console.log('代理测试结果:', result3);
 
 // 指定 BigData 通道测试
-const result4 = await testProxyInfo(proxyConfig, TestProxyChannel.BigData);
+const result4 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.BigData });
 console.log('代理测试结果:', result4);
 
 // 指定 IPCC 通道测试
-const result5 = await testProxyInfo(proxyConfig, TestProxyChannel.IPCC);
+const result5 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IPCC });
 console.log('代理测试结果:', result5);
 
 // 指定 IP9 通道测试
-const result6 = await testProxyInfo(proxyConfig, TestProxyChannel.IP9);
+const result6 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP9 });
 console.log('代理测试结果:', result6);
 
 // 使用多通道测试（返回第一个成功的结果）
-const result5 = await testProxyInfo(
-  proxyConfig,
-  [TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]
-);
-console.log('多通道测试结果:', result5);
-```
-
-### 使用代理 URL
-
-```typescript
-import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
-
-// HTTP 代理
-const httpProxyUrl = 'http://username:password@proxy.example.com:10021';
-const result1 = await testProxyInfo(httpProxyUrl);
-
-// HTTPS 代理
-const httpsProxyUrl = 'https://username:password@secure-proxy.example.com:443';
-const result2 = await testProxyInfo(httpsProxyUrl, TestProxyChannel.IP234);
+const result7 = await testProxyInfo({
+  proxy: proxyConfig,
+  channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]
+});
+console.log('多通道测试结果:', result7);
 ```
 
 ### 测试本机 IP（不使用代理）
@@ -139,32 +125,23 @@ const result = await testProxyInfo();
 console.log('本机 IP 信息:', result);
 
 // 指定通道测试本机 IP
-const result2 = await testProxyInfo(undefined, TestProxyChannel.IP234);
+const result2 = await testProxyInfo({ channel: TestProxyChannel.IP234 });
 console.log('本机 IP 信息:', result2);
 ```
 
 ### 使用自定义 Fetcher
 
 ```typescript
-import { testProxyInfo, createProxyFetch } from 'test-proxy-info';
+import { testProxyInfo, Fetcher } from 'test-proxy-info';
 
-// 创建自定义 fetcher（例如：复用同一个代理连接）
-const customFetch = createProxyFetch({
-  protocol: 'http',
-  host: 'proxy.example.com',
-  port: '10021',
-});
-
-// 使用自定义 fetcher 进行多次测试（复用连接）
-const result1 = await testProxyInfo(customFetch);
-const result2 = await testProxyInfo(customFetch);
-
-// 或者完全自定义 fetcher 函数
-const myFetcher = async (url: string) => {
+// 自定义 fetcher 函数
+const myFetcher: Fetcher = async (url) => {
   // 自定义请求逻辑
   return fetch(url);
 };
-const result3 = await testProxyInfo(myFetcher);
+
+const result = await testProxyInfo({ fetcher: myFetcher });
+console.log('测试结果:', result);
 ```
 
 ### CommonJS 使用方式
@@ -182,11 +159,11 @@ async function test() {
   };
   
   // 使用默认通道
-  const result = await testProxyInfo(proxyConfig);
+  const result = await testProxyInfo({ proxy: proxyConfig });
   console.log('代理测试结果:', result);
   
   // 或指定通道
-  const result2 = await testProxyInfo(proxyConfig, TestProxyChannel.IP234);
+  const result2 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP234 });
   console.log('代理测试结果:', result2);
 }
 
@@ -195,21 +172,23 @@ test();
 
 ## API 文档
 
-### `testProxyInfo(options?, channel?)`
+### `testProxyInfo(options?)`
 
 主要的代理测试函数。
 
 **参数：**
 
-- `options`: `CreateProxyFetchOptions | Fetcher` (可选) - 代理配置对象、代理 URL 字符串或自定义 Fetcher 函数
-- `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
-  - `TestProxyChannel.IP234` - 使用 IP234 服务
-  - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
-  - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务（不提供时区信息）
-  - `TestProxyChannel.IPCC` - 使用 IP.CC 服务
-  - `TestProxyChannel.IP9` - 使用 IP9 服务（不提供时区信息）
-  - 传入数组时，会并发测试所有通道，返回第一个成功的结果
-  - 默认值：使用所有通道
+- `options`: `TestProxyOptions` (可选) - 测试选项对象
+  - `proxy`: `ProxyConfig` (可选) - 代理配置对象
+  - `fetcher`: `Fetcher` (可选) - 自定义请求器函数
+  - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
+    - `TestProxyChannel.IP234` - 使用 IP234 服务
+    - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
+    - `TestProxyChannel.BigData` - 使用 BigDataCloud 服务（不提供时区信息）
+    - `TestProxyChannel.IPCC` - 使用 IP.CC 服务
+    - `TestProxyChannel.IP9` - 使用 IP9 服务（不提供时区信息）
+    - 传入数组时，会并发测试所有通道，返回第一个成功的结果
+    - 默认值：使用所有通道
 
 **返回值：**
 
@@ -232,27 +211,17 @@ test();
 - `Error` - 当测试失败时抛出标准 Error
 - `AggregateError` - 当使用多通道测试且所有通道都失败时抛出
 
-### `createProxyFetch(options?)`
+### 类型定义
 
-创建带代理配置的 Fetcher 函数。
-
-**参数：**
-
-- `options`: `CreateProxyFetchOptions` (可选) - 代理配置对象或代理 URL 字符串
-
-**返回值：**
-
-返回一个 `Fetcher` 函数，可用于 `testProxyInfo` 或直接发送 HTTP 请求。
+#### `TestProxyOptions`
 
 ```typescript
-import { createProxyFetch } from 'test-proxy-info';
-
-const fetcher = createProxyFetch('http://user:pass@proxy.example.com:8080');
-const response = await fetcher('https://api.example.com/data');
-const data = await response.json();
+interface TestProxyOptions {
+  proxy?: ProxyConfig;                          // 代理配置
+  fetcher?: Fetcher;                            // 自定义请求器
+  channel?: TestProxyChannel | TestProxyChannel[]; // 测试通道
+}
 ```
-
-### 类型定义
 
 #### `ProxyConfig`
 
@@ -295,13 +264,7 @@ enum TestProxyChannel {
 #### `Fetcher`
 
 ```typescript
-type Fetcher = typeof fetch;  // 兼容标准 fetch API 的函数
-```
-
-#### `CreateProxyFetchOptions`
-
-```typescript
-type CreateProxyFetchOptions = ProxyConfig | string;  // 代理配置对象或代理 URL 字符串
+type Fetcher = (input: string | Request, init?: RequestInit) => Promise<Response>;
 ```
 
 ## 示例
@@ -314,15 +277,15 @@ import { testProxyInfo, TestProxyChannel, TestProxyResult } from 'test-proxy-inf
 async function testProxy() {
   try {
     // 方式 1: 使用默认通道（推荐）
-    const config = {
-      protocol: 'http',
+    const proxyConfig = {
+      protocol: 'http' as const,
       host: 'proxy.example.com',
       port: '10021',
       username: 'myuser',
       password: 'mypass',
     };
     
-    const result: TestProxyResult = await testProxyInfo(config);
+    const result: TestProxyResult = await testProxyInfo({ proxy: proxyConfig });
     
     console.log('代理测试成功！');
     console.log(`出口 IP: ${result.ip}`);
@@ -331,14 +294,9 @@ async function testProxy() {
     console.log(`延迟: ${result.latency}ms`);
     console.log(`通道: ${result.channel}`);
     
-    // 方式 2: 使用 URL 字符串
-    const url = 'http://myuser:mypass@proxy.example.com:10021';
-    const result2 = await testProxyInfo(url);
-    console.log('第二次测试结果:', result2);
-    
-    // 方式 3: 指定 IP234 通道
-    const result3 = await testProxyInfo(config, TestProxyChannel.IP234);
-    console.log('IP234 测试结果:', result3);
+    // 方式 2: 指定 IP234 通道
+    const result2 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP234 });
+    console.log('IP234 测试结果:', result2);
     
   } catch (error) {
     console.error('代理测试失败:', error.message);
@@ -351,17 +309,17 @@ testProxy();
 ### 批量测试多个代理
 
 ```typescript
-import { testProxyInfo } from 'test-proxy-info';
+import { testProxyInfo, ProxyConfig } from 'test-proxy-info';
 
 async function testMultipleProxies() {
-  const proxies = [
-    'http://user1:pass1@proxy1.example.com:10021',
-    'http://user2:pass2@proxy2.example.com:10022',
-    'http://user3:pass3@proxy3.example.com:10023',
+  const proxies: ProxyConfig[] = [
+    { protocol: 'http', host: 'proxy1.example.com', port: '10021', username: 'user1', password: 'pass1' },
+    { protocol: 'http', host: 'proxy2.example.com', port: '10022', username: 'user2', password: 'pass2' },
+    { protocol: 'http', host: 'proxy3.example.com', port: '10023', username: 'user3', password: 'pass3' },
   ];
 
   const results = await Promise.allSettled(
-    proxies.map(proxy => testProxyInfo(proxy))
+    proxies.map(proxy => testProxyInfo({ proxy }))
   );
 
   results.forEach((result, index) => {
@@ -392,14 +350,14 @@ import { testProxyInfo } from 'test-proxy-info';
 async function testWithErrorHandling() {
   try {
     const proxyConfig = {
-      protocol: 'http',
+      protocol: 'http' as const,
       host: 'proxy.example.com',
       port: '10021',
       username: 'user',
       password: 'pass',
     };
     
-    const result = await testProxyInfo(proxyConfig);
+    const result = await testProxyInfo({ proxy: proxyConfig });
     console.log('测试成功:', result);
     
   } catch (error) {

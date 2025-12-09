@@ -1,5 +1,5 @@
-import { TestProxyResult, TestProxyChannel } from '../common';
-import { Fetcher, CreateProxyFetchOptions, createProxyFetch } from '../requester';
+import { TestProxyResult, TestProxyChannel, SimpleTestProxyOptions } from '../common';
+import { createProxyFetch } from '../requester';
 
 /**
  * IPCC结果
@@ -39,8 +39,8 @@ interface IPCCResponse {
  * @param createRequesterOptions 创建请求器选项
  * @returns 代理测试结果
  */
-export async function testProxyInfoByIPCC(options?: CreateProxyFetchOptions | Fetcher): Promise<TestProxyResult> {
-  const customFetch = typeof options === 'function' ? options : createProxyFetch(options);
+export async function testProxyInfoByIPCC(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
+  const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
   const { data, code, msg } = await customFetch("https://ip.cc/webapi/product/api-ip-address?language=zh").then(res => res.json() as Promise<IPCCResponse>)
   const latency = Date.now() - startTime;

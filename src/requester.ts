@@ -1,25 +1,5 @@
 import { ProxyAgent, fetch as undiciFetch, Dispatcher } from 'undici';
-
-/**
- * 自定义请求器
- */
-export type Fetcher = (input: string | Request, init?: RequestInit) => Promise<Response>;
-
-/**
- * 代理配置
- */
-export interface ProxyConfig {
-  /** 协议 */
-  protocol: 'http' | 'https';
-  /** 主机 */
-  host: string;
-  /** 端口 */
-  port?: string | number;
-  /** 用户名 */
-  username?: string;
-  /** 密码 */
-  password?: string;
-}
+import { ProxyConfig, Fetcher } from './common';
 
 /**
  * Check if the value is a valid http or https prefixed string.

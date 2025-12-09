@@ -1,5 +1,5 @@
-import { TestProxyResult, TestProxyChannel } from '../common';
-import { Fetcher, CreateProxyFetchOptions, createProxyFetch } from '../requester';
+import { TestProxyResult, TestProxyChannel, SimpleTestProxyOptions } from '../common';
+import { createProxyFetch } from '../requester';
 
 /**
  * IP9结果
@@ -56,8 +56,8 @@ interface IP9Response {
  * @param createRequesterOptions 创建请求器选项
  * @returns 代理测试结果
  */
-export async function testProxyInfoByIP9(options?: CreateProxyFetchOptions | Fetcher): Promise<TestProxyResult> {
-  const customFetch = typeof options === 'function' ? options : createProxyFetch(options);
+export async function testProxyInfoByIP9(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
+  const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
   const { data, ret } = await customFetch("https://ip9.com.cn/get").then(res => res.json() as Promise<IP9Response>)
   const latency = Date.now() - startTime;
