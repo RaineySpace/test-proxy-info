@@ -200,7 +200,7 @@ test();
   country: string;             // 国家/地区
   province: string;            // 省份
   city: string;                // 城市
-  timezone: string;            // 时区
+  timezone?: string;           // 时区（部分渠道可能不提供）
   latency: number;             // 请求延迟（毫秒）
   channel: TestProxyChannel;   // 测试通道
 }
@@ -213,12 +213,19 @@ test();
 
 ### 类型定义
 
+#### `SimpleTestProxyOptions`
+
+```typescript
+interface SimpleTestProxyOptions {
+  proxy?: ProxyConfig | string;                 // 代理配置
+  fetcher?: Fetcher;                            // 自定义请求器
+}
+```
+
 #### `TestProxyOptions`
 
 ```typescript
-interface TestProxyOptions {
-  proxy?: ProxyConfig;                          // 代理配置
-  fetcher?: Fetcher;                            // 自定义请求器
+interface TestProxyOptions extends SimpleTestProxyOptions {
   channel?: TestProxyChannel | TestProxyChannel[]; // 测试通道
 }
 ```
@@ -243,7 +250,7 @@ interface TestProxyResult {
   country: string;             // 国家/地区
   province: string;            // 省份
   city: string;                // 城市
-  timezone: string;            // 时区
+  timezone?: string;           // 时区（部分渠道可能不提供）
   latency: number;             // 请求延迟（毫秒）
   channel: TestProxyChannel;   // 测试通道
 }
@@ -382,7 +389,7 @@ testWithErrorHandling();
 ### 运行测试
 
 ```bash
-# 运行所有单元测试
+# 运行所有测试（需要网络连接）
 pnpm test
 
 # 监听模式运行测试

@@ -26,6 +26,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:integration": "SKIP_INTEGRATION_TESTS=false vitest run __tests__/integration.test.ts",
+    "test:unit": "SKIP_INTEGRATION_TESTS=true vitest run",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm run clean && pnpm run build && pnpm test && changeset publish",
