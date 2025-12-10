@@ -1,5 +1,6 @@
 # test-proxy-info
 
+[![Test](https://github.com/RaineySpace/test-proxy-info/actions/workflows/test.yml/badge.svg)](https://github.com/RaineySpace/test-proxy-info/actions/workflows/test.yml)
 [![npm version](https://img.shields.io/npm/v/test-proxy-info.svg)](https://www.npmjs.com/package/test-proxy-info)
 [![npm downloads](https://img.shields.io/npm/dm/test-proxy-info.svg)](https://www.npmjs.com/package/test-proxy-info)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
