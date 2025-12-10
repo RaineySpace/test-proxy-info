@@ -4,6 +4,11 @@
 
 ### Major Changes
 
+- 9462b22: 传入配置项改为对象配置，未来可以更好的拓展配置项，同时移除不必要的函数和对象导出
+- 支持socks5代理
+
+### Migration Guide
+
 - **BREAKING**: 重构 API 为单一 options 对象模式
   - `testProxyInfo(proxyConfig, channel)` 变更为 `testProxyInfo(options)`
   - 新的调用方式: `testProxyInfo({ proxy, fetcher, channel })`
@@ -11,18 +16,22 @@
 - **BREAKING**: 移除 `export * from './channel'` 和 `export * from './requester'`
 - 类型定义集中到 `common.ts`：`Fetcher`、`ProxyConfig`、`TestProxyOptions`、`SimpleTestProxyOptions`
 
-### Migration Guide
-
 ```typescript
 // 旧 API (v1.x)
 await testProxyInfo(proxyConfig);
 await testProxyInfo(proxyConfig, TestProxyChannel.IP234);
-await testProxyInfo(proxyUrl, [TestProxyChannel.IP234, TestProxyChannel.IPInfo]);
+await testProxyInfo(proxyUrl, [
+  TestProxyChannel.IP234,
+  TestProxyChannel.IPInfo,
+]);
 
 // 新 API (v2.x)
 await testProxyInfo({ proxy: proxyConfig });
 await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP234 });
-await testProxyInfo({ proxy: proxyConfig, channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo] });
+await testProxyInfo({
+  proxy: proxyConfig,
+  channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo],
+});
 
 // 测试本机 IP
 await testProxyInfo();
