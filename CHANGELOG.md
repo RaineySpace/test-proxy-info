@@ -1,11 +1,17 @@
 # test-proxy-info
 
+## 2.0.1
+
+### Patch Changes
+
+- 修改默认的超时时间为 30 秒以适应更复杂的网络情况
+
 ## 2.0.0
 
 ### Major Changes
 
 - 9462b22: 传入配置项改为对象配置，未来可以更好的拓展配置项，同时移除不必要的函数和对象导出
-- 支持socks5代理
+- 支持 socks5 代理
 
 ### Migration Guide
 

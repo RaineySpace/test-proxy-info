@@ -80,7 +80,7 @@ export type CreateProxyFetchOptions = ProxyConfig | string;
  * @param proxyConfig 代理配置或代理请求器
  * @returns 代理请求器
  */
-const DEFAULT_TIMEOUT = 3000;
+const DEFAULT_TIMEOUT = 30000;
 
 export function createProxyFetch(proxyConfig?: CreateProxyFetchOptions): Fetcher {
   return async (input, init) => {
