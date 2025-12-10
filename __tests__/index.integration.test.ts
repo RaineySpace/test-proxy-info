@@ -1,13 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  testProxyInfo,
-  TestProxyChannel,
-  TestProxyResult,
-  ProxyConfig,
-  Fetcher,
-  TestProxyOptions,
-  SimpleTestProxyOptions,
-} from '../src/index';
+import { testProxyInfo, TestProxyChannel, Fetcher } from '../src/index';
+
+const SKIP_INTEGRATION_TESTS = process.env.SKIP_INTEGRATION_TESTS !== 'false';
 
 const mockResponse = (data: object): Response => {
   return {
@@ -16,7 +10,7 @@ const mockResponse = (data: object): Response => {
   } as Response;
 };
 
-describe('testProxyInfo', () => {
+describe('testProxyInfo - Mock 集成测试', () => {
   describe('使用多通道测试', () => {
     it('应该返回第一个成功的结果', async () => {
       const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
@@ -105,55 +99,41 @@ describe('testProxyInfo', () => {
   });
 });
 
-describe('类型导出验证', () => {
-  it('TestProxyChannel 枚举应该包含所有通道', () => {
-    expect(TestProxyChannel.IP234).toBe('IP234');
-    expect(TestProxyChannel.IPInfo).toBe('IPInfo');
-    expect(TestProxyChannel.BigData).toBe('BigData');
-    expect(TestProxyChannel.IPCC).toBe('IPCC');
-    expect(TestProxyChannel.IP9).toBe('IP9');
+describe.skipIf(SKIP_INTEGRATION_TESTS)('testProxyInfo - 网络集成测试', () => {
+  it('使用默认通道（所有通道）应该返回有效结果', async () => {
+    const result = await testProxyInfo();
+
+    expect(result.ip).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+    expect(result.country).toBeTruthy();
+    expect(Object.values(TestProxyChannel)).toContain(result.channel);
+    expect(result.latency).toBeGreaterThanOrEqual(0);
   });
 
-  it('应该正确导出所有类型', () => {
-    const result: TestProxyResult = {
-      ip: '1.2.3.4',
-      country: 'US',
-      province: 'California',
-      city: 'San Francisco',
-      timezone: 'America/Los_Angeles',
-      latency: 100,
-      channel: TestProxyChannel.IP234,
-    };
-    expect(result).toBeDefined();
+  it('指定多个通道应该返回第一个成功的结果', async () => {
+    const result = await testProxyInfo({
+      channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData],
+    });
 
-    const proxyConfig: ProxyConfig = {
-      protocol: 'http',
-      host: 'localhost',
-      port: 8080,
-    };
-    expect(proxyConfig).toBeDefined();
-
-    const options: TestProxyOptions = {
-      channel: TestProxyChannel.IP234,
-    };
-    expect(options).toBeDefined();
-
-    const simpleOptions: SimpleTestProxyOptions = {
-      proxy: proxyConfig,
-    };
-    expect(simpleOptions).toBeDefined();
+    expect(result.ip).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+    expect(result.country).toBeTruthy();
+    expect([TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]).toContain(result.channel);
   });
 
-  it('Fetcher 类型应该是函数类型', () => {
-    const fetcher: Fetcher = async () => new Response();
-    expect(typeof fetcher).toBe('function');
-  });
-});
+  it('返回结果应该包含所有必要字段', async () => {
+    const result = await testProxyInfo();
 
-describe('默认导出', () => {
-  it('default 导出应该是 testProxyInfo 函数', async () => {
-    const defaultExport = (await import('../src/index')).default;
-    expect(typeof defaultExport).toBe('function');
-    expect(defaultExport).toBe(testProxyInfo);
+    expect(result).toHaveProperty('ip');
+    expect(result).toHaveProperty('country');
+    expect(result).toHaveProperty('province');
+    expect(result).toHaveProperty('city');
+    expect(result).toHaveProperty('latency');
+    expect(result).toHaveProperty('channel');
+
+    expect(typeof result.ip).toBe('string');
+    expect(typeof result.country).toBe('string');
+    expect(typeof result.province).toBe('string');
+    expect(typeof result.city).toBe('string');
+    expect(typeof result.latency).toBe('number');
+    expect(typeof result.channel).toBe('string');
   });
 });

@@ -1,62 +1,73 @@
 import { ProxyAgent, fetch as undiciFetch, Dispatcher } from 'undici';
+import { socksDispatcher } from 'fetch-socks';
 import { ProxyConfig, Fetcher } from './common';
 
 /**
- * Check if the value is a valid http or https prefixed string.
- *
- * @param {string} value
- * @returns {boolean}
- */
-function isHttpOrHttpsPrefixed (value: string): boolean {
-  return (
-    value != null &&
-    value[0] === 'h' &&
-    value[1] === 't' &&
-    value[2] === 't' &&
-    value[3] === 'p' &&
-    (
-      value[4] === ':' ||
-      (
-        value[4] === 's' &&
-        value[5] === ':'
-      )
-    )
-  )
-}
-
-/**
  * 获取代理URL
- * @param proxyConfig 代理配置或代理URL
+ * @param proxy 代理配置或代理URL
  * @returns 代理URL
  */
-function compositeProxy(proxyConfig: ProxyConfig): string {
-  let url = `${proxyConfig.protocol}://`;
+export function compositeProxy(proxy: ProxyConfig | string): string {
+  if (typeof proxy === 'string') return proxy;
+  let url = `${proxy.protocol}://`;
   
   // 添加认证信息
-  if (proxyConfig.username && proxyConfig.password) {
-    url += `${proxyConfig.username}:${proxyConfig.password}@`;
+  if (proxy.username && proxy.password) {
+    url += `${proxy.username}:${proxy.password}@`;
   }
   
   // 添加主机和端口
-  url += proxyConfig.host;
-  if (proxyConfig.port) {
-    url += `:${proxyConfig.port}`;
+  url += proxy.host;
+  if (proxy.port) {
+    url += `:${proxy.port}`;
   }
-  
+
   return url;
 }
 
-function createDispatcher(proxyConfig: ProxyConfig | string): Dispatcher {
-  let proxyUri: string;
-  if (typeof proxyConfig === 'string') {
-    proxyUri = proxyConfig;
-  } else {
-    proxyUri = compositeProxy(proxyConfig);
+/**
+ * 解析代理配置
+ * @param proxy 代理配置或代理URL
+ * @returns 代理配置
+ */
+export const DEFAULT_PORTS: Record<ProxyConfig['protocol'], number> = {
+  http: 80,
+  https: 443,
+  socks5: 1080,
+};
+
+export function parseProxyConfig(proxy: ProxyConfig | string): ProxyConfig {
+  if (typeof proxy === 'object') return proxy;
+  const url = new URL(proxy);
+  const protocol = url.protocol.replace(':', '');
+  if (!['http', 'https', 'socks5'].includes(protocol)) {
+    throw new Error('Invalid Proxy URL protocol: the URL must start with http:, https: or socks5:.');
   }
-  if (!isHttpOrHttpsPrefixed(proxyUri)) {
-    throw new Error(`Invalid Proxy URL protocol: the URL must start with http: or https:.`);
+  return {
+    protocol: protocol as ProxyConfig['protocol'],
+    host: url.hostname,
+    port: url.port ? parseInt(url.port) : undefined,
+    username: url.username ? decodeURIComponent(url.username) : undefined,
+    password: url.password ? decodeURIComponent(url.password) : undefined,
+  };
+}
+
+export function getProxyPort(proxyConfig: ProxyConfig): number {
+  return proxyConfig.port || DEFAULT_PORTS[proxyConfig.protocol];
+}
+
+function createDispatcher(proxy: ProxyConfig | string): Dispatcher {
+  const proxyConfig = parseProxyConfig(proxy);
+  if (proxyConfig.protocol === 'http' || proxyConfig.protocol === 'https') {
+    return new ProxyAgent({ uri: compositeProxy(proxy) });
   }
-  return new ProxyAgent({ uri: proxyUri });
+  return socksDispatcher({
+    type: 5,
+    host: proxyConfig.host,
+    port: getProxyPort(proxyConfig),
+    userId: proxyConfig.username,
+    password: proxyConfig.password,
+  });
 }
 
 /**

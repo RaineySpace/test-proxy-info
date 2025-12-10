@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { testProxyInfo, TestProxyChannel, Fetcher } from '../../src/index';
+import { testProxyInfoByIpInfo } from '../../src/channel/ip-info';
+import { TestProxyChannel, Fetcher } from '../../src/common';
 
 const mockResponse = (data: object): Response => {
   return {
@@ -8,7 +9,7 @@ const mockResponse = (data: object): Response => {
   } as Response;
 };
 
-describe('IPInfo 通道测试', () => {
+describe('testProxyInfoByIpInfo', () => {
   it('应该返回正确的 IP 信息', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
@@ -20,10 +21,7 @@ describe('IPInfo 通道测试', () => {
       })
     );
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IPInfo,
-    });
+    const result = await testProxyInfoByIpInfo({ fetcher: mockFetcher });
 
     expect(result.ip).toBe('1.2.3.4');
     expect(result.country).toBe('US');
@@ -40,10 +38,7 @@ describe('IPInfo 通道测试', () => {
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IPInfo,
-      })
+      testProxyInfoByIpInfo({ fetcher: mockFetcher })
     ).rejects.toThrow('IPInfo 检测渠道异常');
   });
 
@@ -59,11 +54,24 @@ describe('IPInfo 通道测试', () => {
       });
     });
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IPInfo,
-    });
+    const result = await testProxyInfoByIpInfo({ fetcher: mockFetcher });
 
     expect(result.latency).toBeGreaterThanOrEqual(40);
+  });
+
+  it('应该调用 fetcher 请求正确的 URL', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        ip: '1.2.3.4',
+        country: 'US',
+        region: 'California',
+        city: 'San Francisco',
+        timezone: 'America/Los_Angeles',
+      })
+    );
+
+    await testProxyInfoByIpInfo({ fetcher: mockFetcher });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ipinfo.io/json');
   });
 });

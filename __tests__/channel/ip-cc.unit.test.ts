@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { testProxyInfo, TestProxyChannel, Fetcher } from '../../src/index';
+import { testProxyInfoByIPCC } from '../../src/channel/ip-cc';
+import { TestProxyChannel, Fetcher } from '../../src/common';
 
 const mockResponse = (data: object): Response => {
   return {
@@ -8,12 +9,11 @@ const mockResponse = (data: object): Response => {
   } as Response;
 };
 
-describe('IPCC 通道测试', () => {
+describe('testProxyInfoByIPCC', () => {
   it('应该返回正确的 IP 信息', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
         code: 200,
-        msg: 'success',
         data: {
           geolocation: {
             ip: '1.2.3.4',
@@ -23,13 +23,11 @@ describe('IPCC 通道测试', () => {
             timezone: 'America/Los_Angeles',
           },
         },
+        msg: 'success',
       })
     );
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IPCC,
-    });
+    const result = await testProxyInfoByIPCC({ fetcher: mockFetcher });
 
     expect(result.ip).toBe('1.2.3.4');
     expect(result.country).toBe('美国');
@@ -44,33 +42,27 @@ describe('IPCC 通道测试', () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
         code: 500,
-        msg: '服务器错误',
         data: null,
+        msg: '服务器错误',
       })
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IPCC,
-      })
+      testProxyInfoByIPCC({ fetcher: mockFetcher })
     ).rejects.toThrow('IPCC 检测渠道异常: 服务器错误');
   });
 
-  it('data 为空时应该抛出错误', async () => {
+  it('数据为空时应该抛出错误', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
         code: 200,
-        msg: 'success',
         data: null,
+        msg: 'success',
       })
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IPCC,
-      })
+      testProxyInfoByIPCC({ fetcher: mockFetcher })
     ).rejects.toThrow('IPCC 检测渠道异常');
   });
 
@@ -79,7 +71,6 @@ describe('IPCC 通道测试', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
       return mockResponse({
         code: 200,
-        msg: 'success',
         data: {
           geolocation: {
             ip: '1.2.3.4',
@@ -89,14 +80,34 @@ describe('IPCC 通道测试', () => {
             timezone: 'America/Los_Angeles',
           },
         },
+        msg: 'success',
       });
     });
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IPCC,
-    });
+    const result = await testProxyInfoByIPCC({ fetcher: mockFetcher });
 
     expect(result.latency).toBeGreaterThanOrEqual(40);
+  });
+
+  it('应该调用 fetcher 请求正确的 URL', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        code: 200,
+        data: {
+          geolocation: {
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          },
+        },
+        msg: 'success',
+      })
+    );
+
+    await testProxyInfoByIPCC({ fetcher: mockFetcher });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh');
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { testProxyInfo, TestProxyChannel, Fetcher } from '../../src/index';
+import { testProxyInfoByIP9 } from '../../src/channel/ip9';
+import { TestProxyChannel, Fetcher } from '../../src/common';
 
 const mockResponse = (data: object): Response => {
   return {
@@ -8,29 +9,27 @@ const mockResponse = (data: object): Response => {
   } as Response;
 };
 
-describe('IP9 通道测试', () => {
+describe('testProxyInfoByIP9', () => {
   it('应该返回正确的 IP 信息', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
         ret: 200,
         data: {
           ip: '1.2.3.4',
-          country: '美国',
-          prov: '加利福尼亚',
-          city: '旧金山',
+          country: '中国',
+          prov: '广东省',
+          city: '深圳市',
         },
+        qt: 0.001,
       })
     );
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IP9,
-    });
+    const result = await testProxyInfoByIP9({ fetcher: mockFetcher });
 
     expect(result.ip).toBe('1.2.3.4');
-    expect(result.country).toBe('美国');
-    expect(result.province).toBe('加利福尼亚');
-    expect(result.city).toBe('旧金山');
+    expect(result.country).toBe('中国');
+    expect(result.province).toBe('广东省');
+    expect(result.city).toBe('深圳市');
     expect(result.timezone).toBeUndefined();
     expect(result.channel).toBe(TestProxyChannel.IP9);
     expect(result.latency).toBeGreaterThanOrEqual(0);
@@ -41,30 +40,26 @@ describe('IP9 通道测试', () => {
       mockResponse({
         ret: 500,
         data: null,
+        qt: 0,
       })
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IP9,
-      })
+      testProxyInfoByIP9({ fetcher: mockFetcher })
     ).rejects.toThrow('IP9 检测渠道异常: 500');
   });
 
-  it('data 为空时应该抛出错误', async () => {
+  it('数据为空时应该抛出错误', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
         ret: 200,
         data: null,
+        qt: 0,
       })
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IP9,
-      })
+      testProxyInfoByIP9({ fetcher: mockFetcher })
     ).rejects.toThrow('IP9 检测渠道异常');
   });
 
@@ -75,18 +70,35 @@ describe('IP9 通道测试', () => {
         ret: 200,
         data: {
           ip: '1.2.3.4',
-          country: '美国',
-          prov: '加利福尼亚',
-          city: '旧金山',
+          country: '中国',
+          prov: '广东省',
+          city: '深圳市',
         },
+        qt: 0.001,
       });
     });
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IP9,
-    });
+    const result = await testProxyInfoByIP9({ fetcher: mockFetcher });
 
     expect(result.latency).toBeGreaterThanOrEqual(40);
+  });
+
+  it('应该调用 fetcher 请求正确的 URL', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        ret: 200,
+        data: {
+          ip: '1.2.3.4',
+          country: '中国',
+          prov: '广东省',
+          city: '深圳市',
+        },
+        qt: 0.001,
+      })
+    );
+
+    await testProxyInfoByIP9({ fetcher: mockFetcher });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip9.com.cn/get');
   });
 });

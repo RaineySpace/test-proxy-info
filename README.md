@@ -10,7 +10,7 @@
 
 ## 功能特性
 
-- ✅ 支持 HTTP/HTTPS 代理测试
+- ✅ 支持 HTTP/HTTPS/SOCKS5 代理测试
 - ✅ 获取代理出口 IP 地址
 - ✅ 获取代理地理位置信息（国家、省份、城市、时区）
 - ✅ 测量请求延迟（latency）
@@ -67,9 +67,9 @@ import { testProxyInfo, TestProxyChannel } from 'test-proxy-info';
 
 // 使用代理配置对象
 const proxyConfig = {
-  protocol: 'http', // 支持 'http' | 'https'
+  protocol: 'http', // 支持 'http' | 'https' | 'socks5'
   host: 'proxy.example.com',
-  port: '10021',
+  port: 10021,
   username: 'your-username',
   password: 'your-password',
 };
@@ -116,6 +116,28 @@ const result7 = await testProxyInfo({
 console.log('多通道测试结果:', result7);
 ```
 
+### 使用 SOCKS5 代理
+
+```typescript
+import { testProxyInfo } from 'test-proxy-info';
+
+// 方式 1: 使用配置对象
+const result = await testProxyInfo({
+  proxy: {
+    protocol: 'socks5',
+    host: 'localhost',
+    port: 1080,
+    username: 'user',  // 可选
+    password: 'pass',  // 可选
+  }
+});
+
+// 方式 2: 使用 URL 字符串
+const result2 = await testProxyInfo({
+  proxy: 'socks5://user:pass@localhost:1080'
+});
+```
+
 ### 测试本机 IP（不使用代理）
 
 ```typescript
@@ -154,7 +176,7 @@ async function test() {
   const proxyConfig = {
     protocol: 'http',
     host: 'proxy.example.com',
-    port: '10021',
+    port: 10021,
     username: 'your-username',
     password: 'your-password',
   };
@@ -180,7 +202,7 @@ test();
 **参数：**
 
 - `options`: `TestProxyOptions` (可选) - 测试选项对象
-  - `proxy`: `ProxyConfig` (可选) - 代理配置对象
+  - `proxy`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
   - `fetcher`: `Fetcher` (可选) - 自定义请求器函数
   - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
     - `TestProxyChannel.IP234` - 使用 IP234 服务
@@ -235,11 +257,11 @@ interface TestProxyOptions extends SimpleTestProxyOptions {
 
 ```typescript
 interface ProxyConfig {
-  protocol: 'http' | 'https';  // 代理协议
-  host: string;                // 代理服务器主机地址
-  port?: string | number;      // 代理服务器端口（可选）
-  username?: string;           // 认证用户名（可选）
-  password?: string;           // 认证密码（可选）
+  protocol: 'http' | 'https' | 'socks5';  // 代理协议
+  host: string;                            // 代理服务器主机地址
+  port?: number;                           // 代理服务器端口（可选，默认: http=80, https=443, socks5=1080）
+  username?: string;                       // 认证用户名（可选）
+  password?: string;                       // 认证密码（可选）
 }
 ```
 
@@ -288,7 +310,7 @@ async function testProxy() {
     const proxyConfig = {
       protocol: 'http' as const,
       host: 'proxy.example.com',
-      port: '10021',
+      port: 10021,
       username: 'myuser',
       password: 'mypass',
     };
@@ -306,6 +328,16 @@ async function testProxy() {
     const result2 = await testProxyInfo({ proxy: proxyConfig, channel: TestProxyChannel.IP234 });
     console.log('IP234 测试结果:', result2);
     
+    // 方式 3: 使用 SOCKS5 代理
+    const socks5Result = await testProxyInfo({
+      proxy: {
+        protocol: 'socks5',
+        host: 'localhost',
+        port: 1080,
+      }
+    });
+    console.log('SOCKS5 测试结果:', socks5Result);
+    
   } catch (error) {
     console.error('代理测试失败:', error.message);
   }
@@ -321,9 +353,9 @@ import { testProxyInfo, ProxyConfig } from 'test-proxy-info';
 
 async function testMultipleProxies() {
   const proxies: ProxyConfig[] = [
-    { protocol: 'http', host: 'proxy1.example.com', port: '10021', username: 'user1', password: 'pass1' },
-    { protocol: 'http', host: 'proxy2.example.com', port: '10022', username: 'user2', password: 'pass2' },
-    { protocol: 'http', host: 'proxy3.example.com', port: '10023', username: 'user3', password: 'pass3' },
+    { protocol: 'http', host: 'proxy1.example.com', port: 10021, username: 'user1', password: 'pass1' },
+    { protocol: 'http', host: 'proxy2.example.com', port: 10022, username: 'user2', password: 'pass2' },
+    { protocol: 'socks5', host: 'proxy3.example.com', port: 1080, username: 'user3', password: 'pass3' },
   ];
 
   const results = await Promise.allSettled(
@@ -360,7 +392,7 @@ async function testWithErrorHandling() {
     const proxyConfig = {
       protocol: 'http' as const,
       host: 'proxy.example.com',
-      port: '10021',
+      port: 10021,
       username: 'user',
       password: 'pass',
     };
@@ -384,6 +416,7 @@ testWithErrorHandling();
 ## 依赖项
 
 - [undici](https://github.com/nodejs/undici) - Node.js 官方 HTTP 客户端
+- [fetch-socks](https://github.com/Kaciras/fetch-socks) - SOCKS5 代理支持
 
 ## 测试
 
@@ -419,8 +452,6 @@ pnpm test:ui
 - ✅ TypeScript 类型测试
 - ✅ 错误处理测试
 - ✅ Mock 测试
-
-查看详细的测试文档：[__tests__/README.md](./__tests__/README.md)
 
 ## 开发
 

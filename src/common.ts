@@ -24,11 +24,11 @@ export type Fetcher = (input: string | Request, init?: RequestInit) => Promise<R
  */
 export interface ProxyConfig {
   /** 协议 */
-  protocol: 'http' | 'https';
+  protocol: 'http' | 'https' | 'socks5';
   /** 主机 */
   host: string;
   /** 端口 */
-  port?: string | number;
+  port?: number;
   /** 用户名 */
   username?: string;
   /** 密码 */

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { testProxyInfo, TestProxyChannel, Fetcher } from '../../src/index';
+import { testProxyInfoByIp234 } from '../../src/channel/ip234';
+import { TestProxyChannel, Fetcher } from '../../src/common';
 
 const mockResponse = (data: object): Response => {
   return {
@@ -8,7 +9,7 @@ const mockResponse = (data: object): Response => {
   } as Response;
 };
 
-describe('IP234 通道测试', () => {
+describe('testProxyInfoByIp234', () => {
   it('应该返回正确的 IP 信息', async () => {
     const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
       mockResponse({
@@ -20,10 +21,7 @@ describe('IP234 通道测试', () => {
       })
     );
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IP234,
-    });
+    const result = await testProxyInfoByIp234({ fetcher: mockFetcher });
 
     expect(result.ip).toBe('1.2.3.4');
     expect(result.country).toBe('美国');
@@ -40,10 +38,7 @@ describe('IP234 通道测试', () => {
     );
 
     await expect(
-      testProxyInfo({
-        fetcher: mockFetcher,
-        channel: TestProxyChannel.IP234,
-      })
+      testProxyInfoByIp234({ fetcher: mockFetcher })
     ).rejects.toThrow('IP234 检测渠道异常');
   });
 
@@ -59,11 +54,24 @@ describe('IP234 通道测试', () => {
       });
     });
 
-    const result = await testProxyInfo({
-      fetcher: mockFetcher,
-      channel: TestProxyChannel.IP234,
-    });
+    const result = await testProxyInfoByIp234({ fetcher: mockFetcher });
 
     expect(result.latency).toBeGreaterThanOrEqual(40);
+  });
+
+  it('应该调用 fetcher 请求正确的 URL', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        ip: '1.2.3.4',
+        country: '美国',
+        region: '加利福尼亚',
+        city: '旧金山',
+        timezone: 'America/Los_Angeles',
+      })
+    );
+
+    await testProxyInfoByIp234({ fetcher: mockFetcher });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip234.in/ip.json');
   });
 });

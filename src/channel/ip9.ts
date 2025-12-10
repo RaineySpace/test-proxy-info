@@ -59,7 +59,7 @@ interface IP9Response {
 export async function testProxyInfoByIP9(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
   const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
-  const { data, ret } = await customFetch("https://ip9.com.cn/get").then(res => res.json() as Promise<IP9Response>)
+  const { data, ret } = await customFetch('https://ip9.com.cn/get').then(res => res.json() as Promise<IP9Response>)
   const latency = Date.now() - startTime;
   if (ret !== 200) throw new Error(`IP9 检测渠道异常: ${ret}`);
   if (!data) throw new Error('IP9 检测渠道异常');

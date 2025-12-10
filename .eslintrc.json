@@ -28,7 +28,8 @@
       {
         "allow": ["warn", "error"]
       }
-    ]
+    ],
+    "quotes": ["error", "single", { "avoidEscape": true }]
   },
   "ignorePatterns": ["dist/", "node_modules/", "*.config.js", "*.setup.ts"]
 }

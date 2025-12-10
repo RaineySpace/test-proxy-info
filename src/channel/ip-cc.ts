@@ -42,7 +42,7 @@ interface IPCCResponse {
 export async function testProxyInfoByIPCC(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
   const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
-  const { data, code, msg } = await customFetch("https://ip.cc/webapi/product/api-ip-address?language=zh").then(res => res.json() as Promise<IPCCResponse>)
+  const { data, code, msg } = await customFetch('https://ip.cc/webapi/product/api-ip-address?language=zh').then(res => res.json() as Promise<IPCCResponse>)
   const latency = Date.now() - startTime;
   if (code !== 200) throw new Error(`IPCC 检测渠道异常: ${msg}`);
   if (!data) throw new Error('IPCC 检测渠道异常');

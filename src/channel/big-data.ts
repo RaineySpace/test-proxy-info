@@ -42,8 +42,8 @@ export async function testProxyInfoByBigData(options?: SimpleTestProxyOptions): 
   const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
   const [data, { ipString }] = await Promise.all([
-    customFetch("https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-hans").then(res => res.json() as Promise<BigDataResult>),
-    customFetch("https://api.bigdatacloud.net/data/client-ip").then(res => res.json() as Promise<{ ipString: string }>),
+    customFetch('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-hans').then(res => res.json() as Promise<BigDataResult>),
+    customFetch('https://api.bigdatacloud.net/data/client-ip').then(res => res.json() as Promise<{ ipString: string }>),
   ]);
   const latency = Date.now() - startTime;
   if (!data || !ipString) throw new Error('BigData 检测渠道异常');
