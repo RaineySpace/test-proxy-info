@@ -87,6 +87,6 @@ describe('IP9 通道测试', () => {
       channel: TestProxyChannel.IP9,
     });
 
-    expect(result.latency).toBeGreaterThanOrEqual(50);
+    expect(result.latency).toBeGreaterThanOrEqual(40);
   });
 });

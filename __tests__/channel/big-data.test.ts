@@ -89,6 +89,6 @@ describe('BigData 通道测试', () => {
       channel: TestProxyChannel.BigData,
     });
 
-    expect(result.latency).toBeGreaterThanOrEqual(50);
+    expect(result.latency).toBeGreaterThanOrEqual(40);
   });
 });

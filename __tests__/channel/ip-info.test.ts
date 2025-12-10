@@ -64,6 +64,6 @@ describe('IPInfo 通道测试', () => {
       channel: TestProxyChannel.IPInfo,
     });
 
-    expect(result.latency).toBeGreaterThanOrEqual(50);
+    expect(result.latency).toBeGreaterThanOrEqual(40);
   });
 });

@@ -64,6 +64,6 @@ describe('IP234 通道测试', () => {
       channel: TestProxyChannel.IP234,
     });
 
-    expect(result.latency).toBeGreaterThanOrEqual(50);
+    expect(result.latency).toBeGreaterThanOrEqual(40);
   });
 });

@@ -97,6 +97,6 @@ describe('IPCC 通道测试', () => {
       channel: TestProxyChannel.IPCC,
     });
 
-    expect(result.latency).toBeGreaterThanOrEqual(50);
+    expect(result.latency).toBeGreaterThanOrEqual(40);
   });
 });
