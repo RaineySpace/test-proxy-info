@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { testProxyInfo, TestProxyChannel } from '../../src/index';
 
-const SKIP_INTEGRATION_TESTS = process.env.SKIP_INTEGRATION_TESTS !== 'false';
-
-describe.skipIf(SKIP_INTEGRATION_TESTS)('IPInfo 通道集成测试', () => {
+describe('IPInfo 通道集成测试', () => {
   it('应该返回有效的 IP 信息', async () => {
     const result = await testProxyInfo({ channel: TestProxyChannel.IPInfo });
 

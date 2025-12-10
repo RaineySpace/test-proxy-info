@@ -101,4 +101,34 @@ describe('testProxyInfoByIP9', () => {
 
     expect(mockFetcher).toHaveBeenCalledWith('https://ip9.com.cn/get');
   });
+
+  it('language 为 en-us 时应该抛出错误', async () => {
+    const mockFetcher: Fetcher = vi.fn();
+
+    await expect(
+      testProxyInfoByIP9({ fetcher: mockFetcher, language: 'en-us' })
+    ).rejects.toThrow('IP9 检测渠道不支持英文');
+
+    expect(mockFetcher).not.toHaveBeenCalled();
+  });
+
+  it('language 为 zh-hans 时应该正常工作', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        ret: 200,
+        data: {
+          ip: '1.2.3.4',
+          country: '中国',
+          prov: '广东省',
+          city: '深圳市',
+        },
+        qt: 0.001,
+      })
+    );
+
+    const result = await testProxyInfoByIP9({ fetcher: mockFetcher, language: 'zh-hans' });
+
+    expect(result.ip).toBe('1.2.3.4');
+    expect(mockFetcher).toHaveBeenCalled();
+  });
 });

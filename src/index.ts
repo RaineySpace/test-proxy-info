@@ -2,6 +2,13 @@ import { TestProxyResult, TestProxyChannel, TestProxyOptions, SimpleTestProxyOpt
 import { createProxyFetch } from './requester';
 import { testProxyInfoByIp234, testProxyInfoByIpInfo, testProxyInfoByBigData, testProxyInfoByIPCC, testProxyInfoByIP9 } from './channel';
 
+/**
+ * 执行测试通道
+ * @internal
+ * @param channel 测试通道
+ * @param options 测试选项
+ * @returns 测试结果
+ */
 async function executeByChannel(channel: TestProxyChannel, options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
   switch (channel) {
     case TestProxyChannel.IP234:
@@ -24,18 +31,19 @@ async function executeByChannel(channel: TestProxyChannel, options?: SimpleTestP
  * @param options 测试选项
  * @returns 代理测试结果
  */
-export async function testProxyInfo(options?: TestProxyOptions): Promise<TestProxyResult> {
-  const { fetcher, proxy, channel = Object.values(TestProxyChannel) } = options ?? {};
-
+export async function testProxyInfo({ channel = Object.values(TestProxyChannel), ...options }: TestProxyOptions = {}): Promise<TestProxyResult> {
+  // 如果测试通道是数组，则并发测试所有通道
   if (Array.isArray(channel)) {
     if (channel.length === 0) throw new Error('至少需要提供一个测试通道');
-    const customFetch = typeof fetcher === 'function' ? fetcher : createProxyFetch(proxy);
-    return await Promise.any(channel.map(c => executeByChannel(c, { fetcher: customFetch, proxy }))).catch(err => {
+    // 如果没有提供创建请求器，则使用默认创建请求器，保证每个通道都使用相同的创建请求器
+    if (!options.fetcher) options.fetcher = createProxyFetch(options.proxy);
+    return await Promise.any(channel.map(c => executeByChannel(c, options))).catch(err => {
       throw new AggregateError(err.errors, `所有通道测试失败: ${err.errors[0].message}`);
     });
   }
 
-  return await executeByChannel(channel, { fetcher, proxy });
+  // 如果测试通道是单个，则测试单个通道
+  return await executeByChannel(channel, options);
 }
 
 export * from './common';

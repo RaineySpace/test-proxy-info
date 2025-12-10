@@ -110,4 +110,48 @@ describe('testProxyInfoByIPCC', () => {
 
     expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh');
   });
+
+  it('language 为 zh-hans 时应该请求中文', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        code: 200,
+        data: {
+          geolocation: {
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          },
+        },
+        msg: 'success',
+      })
+    );
+
+    await testProxyInfoByIPCC({ fetcher: mockFetcher, language: 'zh-hans' });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh');
+  });
+
+  it('language 为 en-us 时应该请求英文', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        code: 200,
+        data: {
+          geolocation: {
+            ip: '1.2.3.4',
+            country: 'United States',
+            region: 'California',
+            city: 'San Francisco',
+            timezone: 'America/Los_Angeles',
+          },
+        },
+        msg: 'success',
+      })
+    );
+
+    await testProxyInfoByIPCC({ fetcher: mockFetcher, language: 'en-us' });
+
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=en');
+  });
 });

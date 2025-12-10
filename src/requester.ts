@@ -4,6 +4,7 @@ import { ProxyConfig, Fetcher } from './common';
 
 /**
  * 获取代理URL
+ * @internal
  * @param proxy 代理配置或代理URL
  * @returns 代理URL
  */
@@ -26,16 +27,21 @@ export function compositeProxy(proxy: ProxyConfig | string): string {
 }
 
 /**
- * 解析代理配置
- * @param proxy 代理配置或代理URL
- * @returns 代理配置
+ * 代理协议默认端口
+ * @internal
  */
-export const DEFAULT_PORTS: Record<ProxyConfig['protocol'], number> = {
+const DEFAULT_PORTS: Record<ProxyConfig['protocol'], number> = {
   http: 80,
   https: 443,
   socks5: 1080,
-};
+} as const;
 
+/**
+ * 解析代理配置
+ * @internal
+ * @param proxy 代理配置或代理URL
+ * @returns 代理配置
+ */
 export function parseProxyConfig(proxy: ProxyConfig | string): ProxyConfig {
   if (typeof proxy === 'object') return proxy;
   const url = new URL(proxy);
@@ -52,10 +58,22 @@ export function parseProxyConfig(proxy: ProxyConfig | string): ProxyConfig {
   };
 }
 
+/**
+ * 获取代理端口
+ * @internal
+ * @param proxyConfig 代理配置
+ * @returns 代理端口
+ */
 export function getProxyPort(proxyConfig: ProxyConfig): number {
   return proxyConfig.port || DEFAULT_PORTS[proxyConfig.protocol];
 }
 
+/**
+ * 创建请求器调度器，支持HTTP和SOCKS5代理
+ * @internal
+ * @param proxyConfig 代理配置
+ * @returns 请求器调度器
+ */
 function createDispatcher(proxy: ProxyConfig | string): Dispatcher {
   const proxyConfig = parseProxyConfig(proxy);
   if (proxyConfig.protocol === 'http' || proxyConfig.protocol === 'https') {
@@ -71,17 +89,38 @@ function createDispatcher(proxy: ProxyConfig | string): Dispatcher {
 }
 
 /**
+ * 创建URL并添加查询参数
+ * @internal
+ * @param url 原始URL
+ * @param searchParams 查询参数
+ * @returns 包含查询参数的URL
+ */
+export function createURLWithSearchParams(url: string, searchParams: Record<string, string> = {}): string {
+  const urlObj = new URL(url);
+  for (const [key, value] of Object.entries(searchParams)) {
+    urlObj.searchParams.set(key, value);
+  }
+  return urlObj.toString();
+}
+
+/**
  * 创建请求器选项
+ * @internal
  */
 export type CreateProxyFetchOptions = ProxyConfig | string;
 
 /**
- * 创建代理请求器
- * @param proxyConfig 代理配置或代理请求器
- * @returns 代理请求器
+ * 默认请求器超时时间
+ * @internal
  */
 const DEFAULT_TIMEOUT = 30000;
 
+/**
+ * 创建代理请求器
+ * @internal
+ * @param proxyConfig 代理配置或代理请求器
+ * @returns 代理请求器
+ */
 export function createProxyFetch(proxyConfig?: CreateProxyFetchOptions): Fetcher {
   return async (input, init) => {
     return await undiciFetch(input, {

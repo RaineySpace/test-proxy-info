@@ -3,8 +3,8 @@ import {
   compositeProxy,
   parseProxyConfig,
   getProxyPort,
-  DEFAULT_PORTS,
   createProxyFetch,
+  createURLWithSearchParams,
 } from '../src/requester';
 import { ProxyConfig } from '../src/common';
 
@@ -170,14 +170,6 @@ describe('getProxyPort', () => {
   });
 });
 
-describe('DEFAULT_PORTS', () => {
-  it('应该包含所有协议的默认端口', () => {
-    expect(DEFAULT_PORTS.http).toBe(80);
-    expect(DEFAULT_PORTS.https).toBe(443);
-    expect(DEFAULT_PORTS.socks5).toBe(1080);
-  });
-});
-
 describe('createProxyFetch', () => {
   it('应该返回一个函数', () => {
     const fetch = createProxyFetch();
@@ -217,5 +209,44 @@ describe('createProxyFetch', () => {
     await expect(fetch('http://example.com')).rejects.toThrow(
       'Invalid Proxy URL protocol: the URL must start with http:, https: or socks5:.'
     );
+  });
+});
+
+describe('createURLWithSearchParams', () => {
+  it('应该返回不带参数的原始 URL', () => {
+    const url = createURLWithSearchParams('https://example.com/api');
+    expect(url).toBe('https://example.com/api');
+  });
+
+  it('应该正确添加单个查询参数', () => {
+    const url = createURLWithSearchParams('https://example.com/api', { key: 'value' });
+    expect(url).toBe('https://example.com/api?key=value');
+  });
+
+  it('应该正确添加多个查询参数', () => {
+    const url = createURLWithSearchParams('https://example.com/api', { foo: 'bar', baz: 'qux' });
+    expect(url).toContain('foo=bar');
+    expect(url).toContain('baz=qux');
+  });
+
+  it('应该正确编码特殊字符', () => {
+    const url = createURLWithSearchParams('https://example.com/api', { key: 'hello world' });
+    expect(url).toBe('https://example.com/api?key=hello+world');
+  });
+
+  it('应该保留原始 URL 中已有的查询参数', () => {
+    const url = createURLWithSearchParams('https://example.com/api?existing=param', { new: 'value' });
+    expect(url).toContain('existing=param');
+    expect(url).toContain('new=value');
+  });
+
+  it('应该覆盖原始 URL 中同名的查询参数', () => {
+    const url = createURLWithSearchParams('https://example.com/api?key=old', { key: 'new' });
+    expect(url).toBe('https://example.com/api?key=new');
+  });
+
+  it('应该处理空的查询参数对象', () => {
+    const url = createURLWithSearchParams('https://example.com/api', {});
+    expect(url).toBe('https://example.com/api');
   });
 });

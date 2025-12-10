@@ -29,6 +29,7 @@ interface IpInfoResult {
  * @returns 代理测试结果
  */
 export async function testProxyInfoByIpInfo(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
+  if (options?.language === 'en-us') throw new Error('IPInfo 检测渠道不支持英文');
   const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
   const startTime = Date.now();
   const data = await customFetch('https://ipinfo.io/json').then(res => res.json() as Promise<IpInfoResult>);

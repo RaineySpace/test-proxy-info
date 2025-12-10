@@ -17,6 +17,7 @@
 - ✅ 支持用户名/密码认证
 - ✅ 支持多种测试通道（IP234、IPInfo、BigData、IPCC、IP9）
 - ✅ 多通道并发测试，自动返回最快成功的结果
+- ✅ 支持多语言（中文/英文）地理位置信息
 - ✅ 基于 undici 的高性能 HTTP 客户端
 - ✅ TypeScript 类型支持
 - ✅ 同时支持 CommonJS 和 ES Module
@@ -53,9 +54,6 @@ pnpm test:ui
 
 # 生成覆盖率报告
 pnpm test:coverage
-
-# 运行集成测试（需要网络）
-pnpm test:integration
 ```
 
 ## 使用方法
@@ -114,6 +112,14 @@ const result7 = await testProxyInfo({
   channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo, TestProxyChannel.BigData]
 });
 console.log('多通道测试结果:', result7);
+
+// 使用英文语言获取地理位置信息（仅 BigData 和 IPCC 通道支持）
+const result8 = await testProxyInfo({
+  proxy: proxyConfig,
+  language: 'en-us',
+  channel: [TestProxyChannel.BigData, TestProxyChannel.IPCC]
+});
+console.log('英文结果:', result8);
 ```
 
 ### 使用 SOCKS5 代理
@@ -204,6 +210,7 @@ test();
 - `options`: `TestProxyOptions` (可选) - 测试选项对象
   - `proxy`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
   - `fetcher`: `Fetcher` (可选) - 自定义请求器函数
+  - `language`: `'zh-hans' | 'en-us'` (可选) - 返回结果的语言，默认为 `zh-hans`（中文）
   - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
     - `TestProxyChannel.IP234` - 使用 IP234 服务
     - `TestProxyChannel.IPInfo` - 使用 IPInfo 服务
@@ -242,6 +249,7 @@ test();
 interface SimpleTestProxyOptions {
   proxy?: ProxyConfig | string;                 // 代理配置
   fetcher?: Fetcher;                            // 自定义请求器
+  language?: 'zh-hans' | 'en-us';               // 语言（默认: zh-hans）
 }
 ```
 
@@ -290,6 +298,18 @@ enum TestProxyChannel {
   IP9 = 'IP9'           // IP9 测试通道
 }
 ```
+
+### 通道语言支持
+
+| 通道 | 中文 (zh-hans) | 英文 (en-us) | 时区 |
+|------|:--------------:|:------------:|:----:|
+| IP234 | ✅ | ❌ | ✅ |
+| IPInfo | ✅ | ❌ | ✅ |
+| BigData | ✅ | ✅ | ❌ |
+| IPCC | ✅ | ✅ | ✅ |
+| IP9 | ✅ | ❌ | ❌ |
+
+> **注意**: 当使用 `language: 'en-us'` 时，仅 BigData 和 IPCC 通道可用。其他通道会抛出错误。
 
 #### `Fetcher`
 
@@ -431,12 +451,6 @@ pnpm test:watch
 
 # 生成测试覆盖率报告
 pnpm test:coverage
-
-# 运行集成测试（需要网络连接）
-pnpm test:integration
-
-# 只运行单元测试（不需要网络）
-pnpm test:unit
 
 # 使用 UI 界面运行测试
 pnpm test:ui

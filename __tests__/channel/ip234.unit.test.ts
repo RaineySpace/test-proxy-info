@@ -74,4 +74,31 @@ describe('testProxyInfoByIp234', () => {
 
     expect(mockFetcher).toHaveBeenCalledWith('https://ip234.in/ip.json');
   });
+
+  it('language 为 en-us 时应该抛出错误', async () => {
+    const mockFetcher: Fetcher = vi.fn();
+
+    await expect(
+      testProxyInfoByIp234({ fetcher: mockFetcher, language: 'en-us' })
+    ).rejects.toThrow('IP234 检测渠道不支持英文');
+
+    expect(mockFetcher).not.toHaveBeenCalled();
+  });
+
+  it('language 为 zh-hans 时应该正常工作', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+      mockResponse({
+        ip: '1.2.3.4',
+        country: '美国',
+        region: '加利福尼亚',
+        city: '旧金山',
+        timezone: 'America/Los_Angeles',
+      })
+    );
+
+    const result = await testProxyInfoByIp234({ fetcher: mockFetcher, language: 'zh-hans' });
+
+    expect(result.ip).toBe('1.2.3.4');
+    expect(mockFetcher).toHaveBeenCalled();
+  });
 });

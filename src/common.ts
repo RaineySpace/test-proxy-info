@@ -43,6 +43,8 @@ export interface SimpleTestProxyOptions {
   fetcher?: Fetcher;
   /** 代理配置 */
   proxy?: ProxyConfig | string;
+  /** 语言 */
+  language?: 'zh-hans' | 'en-us';
 }
 
 /**

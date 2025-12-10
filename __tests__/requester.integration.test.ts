@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createProxyFetch } from '../src/requester';
 
-const SKIP_INTEGRATION_TESTS = process.env.SKIP_INTEGRATION_TESTS !== 'false';
-
-describe.skipIf(SKIP_INTEGRATION_TESTS)('requester 集成测试', () => {
+describe('requester 集成测试', () => {
   describe('createProxyFetch - 无代理模式', () => {
     it('应该能够成功发起请求', async () => {
       const fetch = createProxyFetch();

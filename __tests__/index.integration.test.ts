@@ -1,8 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { testProxyInfo, TestProxyChannel, Fetcher } from '../src/index';
 
-const SKIP_INTEGRATION_TESTS = process.env.SKIP_INTEGRATION_TESTS !== 'false';
-
 const mockResponse = (data: object): Response => {
   return {
     ok: true,
@@ -99,7 +97,7 @@ describe('testProxyInfo - Mock 集成测试', () => {
   });
 });
 
-describe.skipIf(SKIP_INTEGRATION_TESTS)('testProxyInfo - 网络集成测试', () => {
+describe('testProxyInfo - 网络集成测试', () => {
   it('使用默认通道（所有通道）应该返回有效结果', async () => {
     const result = await testProxyInfo();
 
