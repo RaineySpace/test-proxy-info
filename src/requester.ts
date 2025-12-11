@@ -107,7 +107,14 @@ export function createURLWithSearchParams(url: string, searchParams: Record<stri
  * 创建请求器选项
  * @internal
  */
-export type CreateProxyFetchOptions = ProxyConfig | string;
+export interface CreateProxyFetchOptions {
+  /** 代理配置 */
+  proxy?: ProxyConfig | string;
+  /** 请求器 */
+  fetcher?: Fetcher;
+  /** 请求器超时时间 */
+  timeout?: number;
+}
 
 /**
  * 默认请求器超时时间
@@ -118,15 +125,16 @@ const DEFAULT_TIMEOUT = 30000;
 /**
  * 创建代理请求器
  * @internal
- * @param proxyConfig 代理配置或代理请求器
+ * @param options 创建请求器选项
  * @returns 代理请求器
  */
-export function createProxyFetch(proxyConfig?: CreateProxyFetchOptions): Fetcher {
+export function createProxyFetch({ fetcher = undiciFetch, proxy, timeout = DEFAULT_TIMEOUT }: CreateProxyFetchOptions = {}): Fetcher {
   return async (input, init) => {
-    return await undiciFetch(input, {
+    const timeoutSignal = AbortSignal.timeout(timeout);
+    return await fetcher(input, {
       ...init,
-      signal: init?.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT),
-      dispatcher: proxyConfig ? createDispatcher(proxyConfig) : undefined,
+      dispatcher: proxy ? createDispatcher(proxy) : undefined,
+      signal: init?.signal ? AbortSignal.any([timeoutSignal, init?.signal]) : timeoutSignal,
     });
   };
 }

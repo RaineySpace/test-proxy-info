@@ -108,7 +108,7 @@ describe('testProxyInfoByIPCC', () => {
 
     await testProxyInfoByIPCC({ fetcher: mockFetcher });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh');
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh', expect.any(Object));
   });
 
   it('language 为 zh-hans 时应该请求中文', async () => {
@@ -130,7 +130,7 @@ describe('testProxyInfoByIPCC', () => {
 
     await testProxyInfoByIPCC({ fetcher: mockFetcher, language: 'zh-hans' });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh');
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=zh', expect.any(Object));
   });
 
   it('language 为 en-us 时应该请求英文', async () => {
@@ -152,6 +152,6 @@ describe('testProxyInfoByIPCC', () => {
 
     await testProxyInfoByIPCC({ fetcher: mockFetcher, language: 'en-us' });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=en');
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip.cc/webapi/product/api-ip-address?language=en', expect.any(Object));
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   compositeProxy,
   parseProxyConfig,
@@ -177,38 +177,53 @@ describe('createProxyFetch', () => {
   });
 
   it('应该能接受字符串代理配置', () => {
-    const fetch = createProxyFetch('http://localhost:8080');
+    const fetch = createProxyFetch({ proxy: 'http://localhost:8080' });
     expect(typeof fetch).toBe('function');
   });
 
   it('应该能接受 ProxyConfig 对象', () => {
     const fetch = createProxyFetch({
-      protocol: 'http',
-      host: 'localhost',
-      port: 8080,
+      proxy: {
+        protocol: 'http',
+        host: 'localhost',
+        port: 8080,
+      },
     });
     expect(typeof fetch).toBe('function');
   });
 
   it('应该能接受 SOCKS5 代理配置', () => {
     const fetch = createProxyFetch({
-      protocol: 'socks5',
-      host: 'localhost',
-      port: 1080,
+      proxy: {
+        protocol: 'socks5',
+        host: 'localhost',
+        port: 1080,
+      },
     });
     expect(typeof fetch).toBe('function');
   });
 
   it('应该能接受 SOCKS5 代理 URL', () => {
-    const fetch = createProxyFetch('socks5://localhost:1080');
+    const fetch = createProxyFetch({ proxy: 'socks5://localhost:1080' });
     expect(typeof fetch).toBe('function');
   });
 
   it('应该对无效协议在调用时抛出错误', async () => {
-    const fetch = createProxyFetch('ftp://localhost:21');
+    const fetch = createProxyFetch({ proxy: 'ftp://localhost:21' });
     await expect(fetch('http://example.com')).rejects.toThrow(
       'Invalid Proxy URL protocol: the URL must start with http:, https: or socks5:.'
     );
+  });
+
+  it('应该能接受自定义 timeout', () => {
+    const fetch = createProxyFetch({ timeout: 5000 });
+    expect(typeof fetch).toBe('function');
+  });
+
+  it('应该能接受自定义 fetcher', () => {
+    const mockFetcher = vi.fn();
+    const fetch = createProxyFetch({ fetcher: mockFetcher });
+    expect(typeof fetch).toBe('function');
   });
 });
 

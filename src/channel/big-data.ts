@@ -39,7 +39,7 @@ interface BigDataResult {
  * @returns 代理测试结果
  */
 export async function testProxyInfoByBigData(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
-  const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
+  const customFetch = createProxyFetch(options);
   const startTime = Date.now();
   const language = options?.language === 'en-us' ? 'en' : 'zh-Hans';
   const [data, { ipString }] = await Promise.all([

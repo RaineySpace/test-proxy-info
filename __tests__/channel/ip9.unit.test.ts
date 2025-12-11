@@ -99,7 +99,7 @@ describe('testProxyInfoByIP9', () => {
 
     await testProxyInfoByIP9({ fetcher: mockFetcher });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://ip9.com.cn/get');
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip9.com.cn/get', expect.any(Object));
   });
 
   it('language 为 en-us 时应该抛出错误', async () => {

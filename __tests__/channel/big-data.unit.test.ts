@@ -91,8 +91,8 @@ describe('testProxyInfoByBigData', () => {
 
     await testProxyInfoByBigData({ fetcher: mockFetcher });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-Hans');
-    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/client-ip');
+    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-Hans', expect.any(Object));
+    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/client-ip', expect.any(Object));
   });
 
   it('language 为 zh-hans 时应该请求中文', async () => {
@@ -108,7 +108,7 @@ describe('testProxyInfoByBigData', () => {
 
     await testProxyInfoByBigData({ fetcher: mockFetcher, language: 'zh-hans' });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-Hans');
+    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh-Hans', expect.any(Object));
   });
 
   it('language 为 en-us 时应该请求英文', async () => {
@@ -124,6 +124,6 @@ describe('testProxyInfoByBigData', () => {
 
     await testProxyInfoByBigData({ fetcher: mockFetcher, language: 'en-us' });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en');
+    expect(mockFetcher).toHaveBeenCalledWith('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en', expect.any(Object));
   });
 });

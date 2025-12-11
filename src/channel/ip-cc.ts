@@ -40,7 +40,7 @@ interface IPCCResponse {
  * @returns 代理测试结果
  */
 export async function testProxyInfoByIPCC(options?: SimpleTestProxyOptions): Promise<TestProxyResult> {
-  const customFetch = typeof options?.fetcher === 'function' ? options?.fetcher : createProxyFetch(options?.proxy);
+  const customFetch = createProxyFetch(options);
   const startTime = Date.now();
   const language = options?.language === 'en-us' ? 'en' : 'zh';
   const { data, code, msg } = await customFetch(createURLWithSearchParams('https://ip.cc/webapi/product/api-ip-address', { language })).then(res => res.json() as Promise<IPCCResponse>)

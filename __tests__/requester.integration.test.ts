@@ -16,9 +16,11 @@ describe('requester 集成测试', () => {
   describe('createProxyFetch - HTTP 代理配置对象', () => {
     it.skip('应该能够通过 HTTP 代理发起请求（需要有效的代理服务器）', async () => {
       const fetch = createProxyFetch({
-        protocol: 'http',
-        host: 'localhost',
-        port: 8080,
+        proxy: {
+          protocol: 'http',
+          host: 'localhost',
+          port: 8080,
+        },
       });
       const response = await fetch('https://ipinfo.io/json');
       expect(response.ok).toBe(true);
@@ -28,9 +30,11 @@ describe('requester 集成测试', () => {
   describe('createProxyFetch - SOCKS5 代理配置对象', () => {
     it.skip('应该能够通过 SOCKS5 代理发起请求（需要有效的代理服务器）', async () => {
       const fetch = createProxyFetch({
-        protocol: 'socks5',
-        host: 'localhost',
-        port: 1080,
+        proxy: {
+          protocol: 'socks5',
+          host: 'localhost',
+          port: 1080,
+        },
       });
       const response = await fetch('https://ipinfo.io/json');
       expect(response.ok).toBe(true);
@@ -39,7 +43,7 @@ describe('requester 集成测试', () => {
 
   describe('createProxyFetch - SOCKS5 代理 URL', () => {
     it.skip('应该能够通过 SOCKS5 URL 代理发起请求（需要有效的代理服务器）', async () => {
-      const fetch = createProxyFetch('socks5://localhost:1080');
+      const fetch = createProxyFetch({ proxy: 'socks5://localhost:1080' });
       const response = await fetch('https://ipinfo.io/json');
       expect(response.ok).toBe(true);
     });
@@ -48,11 +52,13 @@ describe('requester 集成测试', () => {
   describe('createProxyFetch - 带认证的 SOCKS5 代理', () => {
     it.skip('应该能够通过带认证的 SOCKS5 代理发起请求（需要有效的代理服务器）', async () => {
       const fetch = createProxyFetch({
-        protocol: 'socks5',
-        host: 'localhost',
-        port: 1080,
-        username: 'user',
-        password: 'pass',
+        proxy: {
+          protocol: 'socks5',
+          host: 'localhost',
+          port: 1080,
+          username: 'user',
+          password: 'pass',
+        },
       });
       const response = await fetch('https://ipinfo.io/json');
       expect(response.ok).toBe(true);

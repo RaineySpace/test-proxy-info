@@ -210,6 +210,7 @@ test();
 - `options`: `TestProxyOptions` (可选) - 测试选项对象
   - `proxy`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
   - `fetcher`: `Fetcher` (可选) - 自定义请求器函数
+  - `timeout`: `number` (可选) - 请求超时时间（毫秒），默认为 `30000`（30秒）
   - `language`: `'zh-hans' | 'en-us'` (可选) - 返回结果的语言，默认为 `zh-hans`（中文）
   - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
     - `TestProxyChannel.IP234` - 使用 IP234 服务
@@ -249,6 +250,7 @@ test();
 interface SimpleTestProxyOptions {
   proxy?: ProxyConfig | string;                 // 代理配置
   fetcher?: Fetcher;                            // 自定义请求器
+  timeout?: number;                             // 请求超时时间（默认: 30000ms）
   language?: 'zh-hans' | 'en-us';               // 语言（默认: zh-hans）
 }
 ```

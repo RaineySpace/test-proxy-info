@@ -39,10 +39,12 @@ export interface ProxyConfig {
  * 单通道代理测试选项
  */
 export interface SimpleTestProxyOptions {
-  /** 创建请求器选项 */
+  /** 请求器 */
   fetcher?: Fetcher;
   /** 代理配置 */
   proxy?: ProxyConfig | string;
+  /** 请求器超时时间 */
+  timeout?: number;
   /** 语言 */
   language?: 'zh-hans' | 'en-us';
 }

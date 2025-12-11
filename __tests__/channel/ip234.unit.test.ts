@@ -72,7 +72,7 @@ describe('testProxyInfoByIp234', () => {
 
     await testProxyInfoByIp234({ fetcher: mockFetcher });
 
-    expect(mockFetcher).toHaveBeenCalledWith('https://ip234.in/ip.json');
+    expect(mockFetcher).toHaveBeenCalledWith('https://ip234.in/ip.json', expect.any(Object));
   });
 
   it('language 为 en-us 时应该抛出错误', async () => {
