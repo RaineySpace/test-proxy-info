@@ -13,7 +13,7 @@
 - ✅ 支持 HTTP/HTTPS/SOCKS5 代理测试
 - ✅ 获取代理出口 IP 地址
 - ✅ 获取代理地理位置信息（国家、省份、城市、时区）
-- ✅ 测量请求延迟（latency）
+- ✅ 测量请求延迟（latency），支持自定义延迟测试 URL
 - ✅ 支持用户名/密码认证
 - ✅ 支持多种测试通道（IP234、IPInfo、BigData、IPCC、IP9）
 - ✅ 多通道并发测试，自动返回最快成功的结果
@@ -120,6 +120,14 @@ const result8 = await testProxyInfo({
   channel: [TestProxyChannel.BigData, TestProxyChannel.IPCC]
 });
 console.log('英文结果:', result8);
+
+// 使用自定义 URL 测试延迟（覆盖通道默认延迟）
+const result9 = await testProxyInfo({
+  proxy: proxyConfig,
+  channel: TestProxyChannel.IPInfo,
+  latencyTestUrl: 'http://www.gstatic.com/generate_204'
+});
+console.log('自定义延迟测试结果:', result9);
 ```
 
 ### 使用 SOCKS5 代理
@@ -211,6 +219,7 @@ test();
   - `proxy`: `ProxyConfig | string` (可选) - 代理配置对象或代理 URL 字符串
   - `fetcher`: `Fetcher` (可选) - 自定义请求器函数
   - `timeout`: `number` (可选) - 请求超时时间（毫秒），默认为 `30000`（30秒）
+  - `latencyTestUrl`: `string` (可选) - 自定义延迟测试 URL，提供时会使用该 URL 测试延迟并覆盖通道返回的延迟值
   - `language`: `'zh-hans' | 'en-us'` (可选) - 返回结果的语言，默认为 `zh-hans`（中文）
   - `channel`: `TestProxyChannel | TestProxyChannel[]` (可选) - 测试通道或通道数组，支持：
     - `TestProxyChannel.IP234` - 使用 IP234 服务
@@ -250,6 +259,7 @@ test();
 interface SimpleTestProxyOptions {
   proxy?: ProxyConfig | string;                 // 代理配置
   fetcher?: Fetcher;                            // 自定义请求器
+  latencyTestUrl?: string;                      // 自定义延迟测试 URL
   timeout?: number;                             // 请求超时时间（默认: 30000ms）
   language?: 'zh-hans' | 'en-us';               // 语言（默认: zh-hans）
 }

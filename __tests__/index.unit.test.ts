@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   TestProxyChannel,
   TestProxyResult,
@@ -6,7 +6,45 @@ import {
   Fetcher,
   TestProxyOptions,
   SimpleTestProxyOptions,
+  testProxyInfo,
 } from '../src/index';
+
+const mockResponse = (data: object): Response => {
+  return {
+    ok: true,
+    json: () => Promise.resolve(data),
+  } as Response;
+};
+
+describe('testProxyInfo', () => {
+  it('使用 latencyTestUrl 时应该正确计算延迟', async () => {
+    const mockFetcher: Fetcher = vi.fn().mockImplementation(async (url: string) => {
+      if (url === 'https://example.com/latency') {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        return mockResponse({})
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return mockResponse({
+        code: 200,
+        data: {
+          geolocation: {
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          },
+        },
+        msg: 'success',
+      });
+    });
+
+    const result = await testProxyInfo({ fetcher: mockFetcher, latencyTestUrl: 'https://example.com/latency' });
+
+    expect(result.latency).toBeGreaterThanOrEqual(40);
+    expect(result.latency).toBeLessThan(60);
+  });
+});
 
 describe('类型导出验证', () => {
   it('TestProxyChannel 枚举应该包含所有通道', () => {

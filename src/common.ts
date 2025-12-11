@@ -43,7 +43,9 @@ export interface SimpleTestProxyOptions {
   fetcher?: Fetcher;
   /** 代理配置 */
   proxy?: ProxyConfig | string;
-  /** 请求器超时时间 */
+  /** 延迟测试 URL */
+  latencyTestUrl?: string;
+  /** 代理测试超时时间 */
   timeout?: number;
   /** 语言 */
   language?: 'zh-hans' | 'en-us';

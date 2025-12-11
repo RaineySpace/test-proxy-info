@@ -95,6 +95,108 @@ describe('testProxyInfo - Mock 集成测试', () => {
       ).rejects.toThrow('不支持的通道');
     });
   });
+
+  describe('latencyTestUrl 测试', () => {
+    it('提供 latencyTestUrl 时应该使用该 URL 测试延迟', async () => {
+      let latencyFetchCalled = false;
+      const mockFetcher: Fetcher = vi.fn().mockImplementation((url: string) => {
+        if (url === 'https://example.com/latency') {
+          latencyFetchCalled = true;
+        }
+        return Promise.resolve(
+          mockResponse({
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          })
+        );
+      });
+
+      const result = await testProxyInfo({
+        fetcher: mockFetcher,
+        channel: TestProxyChannel.IP234,
+        latencyTestUrl: 'https://example.com/latency',
+      });
+
+      expect(latencyFetchCalled).toBe(true);
+      expect(result.ip).toBe('1.2.3.4');
+      expect(result.latency).toBeGreaterThanOrEqual(0);
+    });
+
+    it('不提供 latencyTestUrl 时应该使用通道默认延迟', async () => {
+      const mockFetcher: Fetcher = vi.fn().mockResolvedValue(
+        mockResponse({
+          ip: '1.2.3.4',
+          country: '美国',
+          region: '加利福尼亚',
+          city: '旧金山',
+          timezone: 'America/Los_Angeles',
+        })
+      );
+
+      const result = await testProxyInfo({
+        fetcher: mockFetcher,
+        channel: TestProxyChannel.IP234,
+      });
+
+      expect(result.ip).toBe('1.2.3.4');
+      expect(result.latency).toBeGreaterThanOrEqual(0);
+    });
+
+    it('latencyTestUrl 请求失败时应该抛出错误', async () => {
+      const mockFetcher: Fetcher = vi.fn().mockImplementation((url: string) => {
+        if (url === 'https://example.com/latency') {
+          return Promise.reject(new Error('延迟测试请求失败'));
+        }
+        return Promise.resolve(
+          mockResponse({
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          })
+        );
+      });
+
+      await expect(
+        testProxyInfo({
+          fetcher: mockFetcher,
+          channel: TestProxyChannel.IP234,
+          latencyTestUrl: 'https://example.com/latency',
+        })
+      ).rejects.toThrow('延迟测试请求失败');
+    });
+
+    it('多通道测试时每个通道都应该使用 latencyTestUrl', async () => {
+      let latencyFetchCount = 0;
+      const mockFetcher: Fetcher = vi.fn().mockImplementation((url: string) => {
+        if (url === 'https://example.com/latency') {
+          latencyFetchCount++;
+        }
+        return Promise.resolve(
+          mockResponse({
+            ip: '1.2.3.4',
+            country: '美国',
+            region: '加利福尼亚',
+            city: '旧金山',
+            timezone: 'America/Los_Angeles',
+          })
+        );
+      });
+
+      const result = await testProxyInfo({
+        fetcher: mockFetcher,
+        channel: [TestProxyChannel.IP234, TestProxyChannel.IPInfo],
+        latencyTestUrl: 'https://example.com/latency',
+      });
+
+      expect(result.ip).toBe('1.2.3.4');
+      expect(latencyFetchCount).toBeGreaterThanOrEqual(1);
+    });
+  });
 });
 
 describe('testProxyInfo - 网络集成测试', () => {
