@@ -1,5 +1,19 @@
 # test-proxy-info
 
+## 2.1.0
+
+### Minor Changes
+
+- 1ea461b: 添加多语言支持
+  - 新增 `language` 选项，支持 `zh-hans`（中文）和 `en-us`（英文）
+  - BigData 和 IPCC 通道支持中英文切换
+  - IP234、IPInfo、IP9 通道仅支持中文，使用英文时会抛出错误
+- fc6d624: 添加自定义延迟测试 URL 支持
+
+### Patch Changes
+
+- 0be9528: 为请求器添加可配置的 timeout 参数支持
+
 ## 2.0.1
 
 ### Patch Changes
