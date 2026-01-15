@@ -3,7 +3,7 @@
 [![Test](https://github.com/RaineySpace/test-proxy-info/actions/workflows/test.yml/badge.svg)](https://github.com/RaineySpace/test-proxy-info/actions/workflows/test.yml)
 [![npm version](https://img.shields.io/npm/v/test-proxy-info.svg)](https://www.npmjs.com/package/test-proxy-info)
 [![npm downloads](https://img.shields.io/npm/dm/test-proxy-info.svg)](https://www.npmjs.com/package/test-proxy-info)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![license](https://img.shields.io/npm/l/test-proxy-info.svg)](https://github.com/RaineySpace/test-proxy-info/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.1-blue.svg)](https://www.typescriptlang.org/)
 
 一个用于测试代理服务器的 Node.js 工具库，支持检测代理的出口 IP 地址及地理位置信息。
